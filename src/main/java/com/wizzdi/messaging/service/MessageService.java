@@ -14,6 +14,7 @@ import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.BadRequestException;
@@ -32,10 +33,14 @@ public class MessageService implements ServicePlugin {
     @PluginInfo(version = 1)
     private MessageRepository messageRepository;
 
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+
 
     public Message createMessage(MessageCreate messageCreate, SecurityContext securityContext) {
         Message message=createMessageNoMerge(messageCreate,securityContext);
         messageRepository.merge(message);
+        applicationEventPublisher.publishEvent(message);
         return message;
     }
 
