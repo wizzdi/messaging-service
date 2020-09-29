@@ -1,5 +1,6 @@
 package com.wizzdi.messaging.websocket;
 
+import com.flexicore.annotations.Protected;
 import com.flexicore.annotations.plugins.PluginInfo;
 import com.flexicore.interfaces.WebSocketPlugin;
 import com.flexicore.model.User;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @ServerEndpoint(value = "/FlexiCore/messageWS/{authenticationKey}", encoders = {MessageMessageEncoder.class})
 @PluginInfo(version = 1)
+@Protected
 @Extension
 @Component
 public class MessageWebSocket implements WebSocketPlugin {
