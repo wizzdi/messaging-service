@@ -1,77 +1,69 @@
 package com.wizzdi.messaging.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.flexicore.model.FilteringInformationHolder;
-import com.flexicore.model.User;
+import com.wizzdi.flexicore.security.request.BasicPropertiesFilter;
+import com.wizzdi.flexicore.security.request.PaginationFilter;
+import com.wizzdi.messaging.model.Chat;
+import com.wizzdi.messaging.model.ChatUser;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class MessageFilter extends FilteringInformationHolder {
+public class MessageFilter extends PaginationFilter {
 
-    private String contentLike;
-    private String subjectLike;
-    private Set<String> fromUsersIds=new HashSet<>();
-    @JsonIgnore
-    private List<User> fromUsers;
-    private Set<String> toUsersIds=new HashSet<>();
-    @JsonIgnore
-    private List<User> toUsers;
+	private BasicPropertiesFilter basicPropertiesFilter;
+	private Set<String> chatsIds=new HashSet<>();
+	@JsonIgnore
+	private List<Chat> chats;
+	private Set<String> senderIds=new HashSet<>();
+	@JsonIgnore
+	private List<ChatUser> senders;
 
-    public String getContentLike() {
-        return contentLike;
-    }
+	public BasicPropertiesFilter getBasicPropertiesFilter() {
+		return basicPropertiesFilter;
+	}
 
-    public <T extends MessageFilter> T setContentLike(String contentLike) {
-        this.contentLike = contentLike;
-        return (T) this;
-    }
+	public <T extends MessageFilter> T setBasicPropertiesFilter(BasicPropertiesFilter basicPropertiesFilter) {
+		this.basicPropertiesFilter = basicPropertiesFilter;
+		return (T) this;
+	}
 
-    public String getSubjectLike() {
-        return subjectLike;
-    }
+	public Set<String> getChatsIds() {
+		return chatsIds;
+	}
 
-    public <T extends MessageFilter> T setSubjectLike(String subjectLike) {
-        this.subjectLike = subjectLike;
-        return (T) this;
-    }
+	public <T extends MessageFilter> T setChatsIds(Set<String> chatsIds) {
+		this.chatsIds = chatsIds;
+		return (T) this;
+	}
 
-    public Set<String> getFromUsersIds() {
-        return fromUsersIds;
-    }
+	@JsonIgnore
+	public List<Chat> getChats() {
+		return chats;
+	}
 
-    public <T extends MessageFilter> T setFromUsersIds(Set<String> fromUsersIds) {
-        this.fromUsersIds = fromUsersIds;
-        return (T) this;
-    }
+	public <T extends MessageFilter> T setChats(List<Chat> chats) {
+		this.chats = chats;
+		return (T) this;
+	}
 
-    @JsonIgnore
-    public List<User> getFromUsers() {
-        return fromUsers;
-    }
+	public Set<String> getSenderIds() {
+		return senderIds;
+	}
 
-    public <T extends MessageFilter> T setFromUsers(List<User> fromUsers) {
-        this.fromUsers = fromUsers;
-        return (T) this;
-    }
+	public <T extends MessageFilter> T setSenderIds(Set<String> senderIds) {
+		this.senderIds = senderIds;
+		return (T) this;
+	}
 
-    public Set<String> getToUsersIds() {
-        return toUsersIds;
-    }
+	@JsonIgnore
+	public List<ChatUser> getSenders() {
+		return senders;
+	}
 
-    public <T extends MessageFilter> T setToUsersIds(Set<String> toUsersIds) {
-        this.toUsersIds = toUsersIds;
-        return (T) this;
-    }
-
-    @JsonIgnore
-    public List<User> getToUsers() {
-        return toUsers;
-    }
-
-    public <T extends MessageFilter> T setToUsers(List<User> toUsers) {
-        this.toUsers = toUsers;
-        return (T) this;
-    }
+	public <T extends MessageFilter> T setSenders(List<ChatUser> senders) {
+		this.senders = senders;
+		return (T) this;
+	}
 }

@@ -1,14 +1,13 @@
 package com.wizzdi.messaging.data;
 
 import com.flexicore.model.Baseclass;
-import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BaseclassRepository;
 import com.wizzdi.flexicore.security.data.BasicRepository;
-import com.wizzdi.messaging.model.Message;
-import com.wizzdi.messaging.model.Message_;
-import com.wizzdi.messaging.request.MessageFilter;
+import com.wizzdi.messaging.model.ChatUser;
+import com.wizzdi.messaging.model.ChatUser_;
+import com.wizzdi.messaging.request.ChatUserFilter;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,14 +17,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
-import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 @Component
 @Extension
-public class MessageRepository implements Plugin {
+public class ChatUserRepository implements Plugin {
 	@PersistenceContext
 	private EntityManager em;
 	@Autowired
@@ -34,36 +32,39 @@ public class MessageRepository implements Plugin {
 	private BasicRepository basicRepository;
 
 
-	public List<Message> listAllMessages(MessageFilter MessageFilter, SecurityContextBase securityContext) {
+	public List<ChatUser> listAllChatUsers(ChatUserFilter ChatUserFilter, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery<Message> q = cb.createQuery(Message.class);
-		Root<Message> r = q.from(Message.class);
+		CriteriaQuery<ChatUser> q = cb.createQuery(ChatUser.class);
+		Root<ChatUser> r = q.from(ChatUser.class);
 		List<Predicate> predicates = new ArrayList<>();
-		addMessagePredicates(MessageFilter, cb, q, r, predicates, securityContext);
+		addChatUserPredicates(ChatUserFilter, cb, q, r, predicates, securityContext);
 		q.select(r).where(predicates.toArray(Predicate[]::new));
-		TypedQuery<Message> query = em.createQuery(q);
-		BasicRepository.addPagination(MessageFilter, query);
+		TypedQuery<ChatUser> query = em.createQuery(q);
+		BasicRepository.addPagination(ChatUserFilter, query);
 		return query.getResultList();
 
 	}
 
-	public <T extends Message> void addMessagePredicates(MessageFilter messageFilter, CriteriaBuilder cb, CommonAbstractCriteria q, From<?, T> r, List<Predicate> predicates, SecurityContextBase securityContext) {
+	public <T extends ChatUser> void addChatUserPredicates(ChatUserFilter chatUserFilter, CriteriaBuilder cb, CommonAbstractCriteria q, From<?, T> r, List<Predicate> predicates, SecurityContextBase securityContext) {
 		
-		if(messageFilter.getBasicPropertiesFilter()!=null){
-			BasicRepository.addBasicPropertiesFilter(messageFilter.getBasicPropertiesFilter(),cb,q,r,predicates);
+		if(chatUserFilter.getBasicPropertiesFilter()!=null){
+			BasicRepository.addBasicPropertiesFilter(chatUserFilter.getBasicPropertiesFilter(),cb,q,r,predicates);
+
+		}
+		if(securityContext!=null){
+			baseclassRepository.addBaseclassPredicates( cb, q, r, predicates, securityContext);
 
 		}
 
 
-
 	}
 
-	public long countAllMessages(MessageFilter MessageFilter, SecurityContextBase securityContext) {
+	public long countAllChatUsers(ChatUserFilter ChatUserFilter, SecurityContextBase securityContext) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Long> q = cb.createQuery(Long.class);
-		Root<Message> r = q.from(Message.class);
+		Root<ChatUser> r = q.from(ChatUser.class);
 		List<Predicate> predicates = new ArrayList<>();
-		addMessagePredicates(MessageFilter, cb, q, r, predicates, securityContext);
+		addChatUserPredicates(ChatUserFilter, cb, q, r, predicates, securityContext);
 		q.select(cb.count(r)).where(predicates.toArray(Predicate[]::new));
 		TypedQuery<Long> query = em.createQuery(q);
 		return query.getSingleResult();
@@ -90,15 +91,11 @@ public class MessageRepository implements Plugin {
 		return baseclassRepository.getByIdOrNull(id, c, securityContext);
 	}
 
-	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
-		return baseclassRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
-	}
-
 	public <T extends Baseclass> List<T> findByIds(Class<T> c, Set<String> requested) {
 		return baseclassRepository.findByIds(c, requested);
 	}
 
-	public <T> T findByIdOrNull(Class<T> type, String id) {
-		return baseclassRepository.findByIdOrNull(type, id);
+	public <T extends ChatUser> T getChatUserByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+		return baseclassRepository.getByIdOrNull(id, c, securityContext);
 	}
 }

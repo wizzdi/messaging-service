@@ -1,140 +1,132 @@
 package com.wizzdi.messaging.service;
 
-import com.flexicore.annotations.plugins.PluginInfo;
-import com.flexicore.data.jsoncontainers.PaginationResponse;
-import com.flexicore.interfaces.ServicePlugin;
 import com.flexicore.model.Baseclass;
-import com.flexicore.model.User;
-import com.flexicore.security.SecurityContext;
-import com.flexicore.service.BaseclassNewService;
+import com.flexicore.model.Basic;
+import com.flexicore.security.SecurityContextBase;
+import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.MessageRepository;
+import com.wizzdi.messaging.model.Chat;
+import com.wizzdi.messaging.model.Chat_;
 import com.wizzdi.messaging.model.Message;
+import com.wizzdi.messaging.model.ChatUser;
 import com.wizzdi.messaging.request.MessageCreate;
 import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
-import javax.ws.rs.BadRequestException;
-import java.util.*;
-import java.util.stream.Collectors;
+import javax.persistence.metamodel.SingularAttribute;
+import java.util.List;
+import java.util.Set;
 
 @Extension
-@PluginInfo(version = 1)
 @Component
-public class MessageService implements ServicePlugin {
-
-    @Autowired
-    private BaseclassNewService baseclassNewService;
-
-    @Autowired
-    @PluginInfo(version = 1)
-    private MessageRepository messageRepository;
-
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+public class MessageService implements Plugin {
 
 
-    public Message createMessage(MessageCreate messageCreate, SecurityContext securityContext) {
-        Message message=createMessageNoMerge(messageCreate,securityContext);
-        messageRepository.merge(message);
-        applicationEventPublisher.publishEvent(message);
-        return message;
-    }
 
-    public boolean updateMessageNoMerge(MessageCreate messageCreate,Message message){
-        boolean update=baseclassNewService.updateBaseclassNoMerge(messageCreate,message);
-        if(messageCreate.getContent()!=null&&!messageCreate.getContent().equals(message.getContent())){
-            message.setContent(messageCreate.getContent());
-            update=true;
-        }
-        if(messageCreate.getSubject()!=null&&!messageCreate.getSubject().equals(message.getSubject())){
-            message.setSubject(messageCreate.getSubject());
-            update=true;
-        }
-        if(messageCreate.getFromUser()!=null&&(message.getFromUser()==null||!messageCreate.getFromUser().getId().equals(message.getFromUser().getId()))){
-            message.setFromUser(messageCreate.getFromUser());
-            update=true;
-        }
-
-        if(messageCreate.getToUser()!=null&&(message.getToUser()==null||!messageCreate.getToUser().getId().equals(message.getToUser().getId()))){
-            message.setToUser(messageCreate.getToUser());
-            update=true;
-        }
-
-        return update;
-    }
-
-    private Message createMessageNoMerge(MessageCreate messageCreate, SecurityContext securityContext) {
-        Message message=new Message(messageCreate.getName(),securityContext);
-        updateMessageNoMerge(messageCreate,message);
-        return message;
-    }
-
-    public void validateCreate(MessageCreate messageCreate,SecurityContext securityContext){
-        validate(messageCreate,securityContext);
-        if(messageCreate.getToUser()==null){
-            throw new BadRequestException("No User with id "+messageCreate.getToUserId());
-
-        }
-    }
-
-    public void validate(MessageCreate messageCreate, SecurityContext securityContext) {
-        String fromUserId=messageCreate.getFromUserId();
-        User fromUser=fromUserId!=null?messageRepository.getByIdOrNull(fromUserId,User.class,null,securityContext):securityContext.getUser();
-        messageCreate.setFromUser(fromUser);
-
-        String toUserId=messageCreate.getToUserId();
-        User toUser=toUserId!=null?messageRepository.getByIdOrNull(toUserId,User.class,null,securityContext):null;
-        if(toUserId!=null&&toUser==null){
-            throw new BadRequestException("No User with id "+toUserId);
-        }
-        messageCreate.setToUser(toUser);
-
-    }
-
-    public void validate(MessageFilter filtering, SecurityContext securityContext) {
-        baseclassNewService.validateFilter(filtering,securityContext);
-        Set<String> fromUserIds=filtering.getFromUsersIds();
-        Map<String, User> fromUsers=fromUserIds.isEmpty()?new HashMap<>():messageRepository.listByIds(User.class,fromUserIds,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
-        fromUserIds.removeAll(fromUsers.keySet());
-        if(!fromUserIds.isEmpty()){
-            throw new BadRequestException("No Users with ids "+fromUserIds);
-        }
-        filtering.setFromUsers(new ArrayList<>(fromUsers.values()));
-
-        Set<String> toUsersIds=filtering.getToUsersIds();
-        Map<String, User> toUsers=toUsersIds.isEmpty()?new HashMap<>():messageRepository.listByIds(User.class,toUsersIds,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
-        toUsersIds.removeAll(toUsers.keySet());
-        if(!toUsersIds.isEmpty()){
-            throw new BadRequestException("No Users with ids "+toUsersIds);
-        }
-        filtering.setToUsers(new ArrayList<>(toUsers.values()));
+	@Autowired
+	private MessageRepository messageRepository;
+	@Autowired
+	private BasicService basicService;
 
 
-    }
+	public Message createMessage(MessageCreate messageCreate, SecurityContextBase securityContext) {
+		Message message = createMessageNoMerge(messageCreate, securityContext);
+		messageRepository.merge(message);
+		return message;
+	}
 
-    public PaginationResponse<Message> getAllMessages(MessageFilter filtering, SecurityContext securityContext) {
-        List<Message> list=listAllMessages(filtering,securityContext);
-        long count=messageRepository.countAllMessages(filtering,securityContext);
-        return new PaginationResponse<>(list,filtering,count);
-    }
+	public void merge(Object o) {
+		messageRepository.merge(o);
+	}
 
-    private List<Message> listAllMessages(MessageFilter filtering, SecurityContext securityContext) {
-        return messageRepository.listAllMessages(filtering,securityContext);
-    }
+	public void massMerge(List<Object> list) {
+		messageRepository.massMerge(list);
+	}
 
-    public Message updateMessage(MessageUpdate messageUpdate, SecurityContext securityContext) {
-        Message message=messageUpdate.getMessage();
-        if(updateMessageNoMerge(messageUpdate,message)){
-            messageRepository.merge(message);
-        }
-        return message;
-    }
+	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
+		return messageRepository.listByIds(c, ids, securityContext);
+	}
 
-    public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, List<String> batchString, SecurityContext securityContext) {
-        return messageRepository.getByIdOrNull(id, c, batchString, securityContext);
-    }
+	public Message createMessageNoMerge(MessageCreate messageCreate, SecurityContextBase securityContext) {
+		Message message = new Message();
+		message.setId(Baseclass.getBase64ID());
+		updateMessageNoMerge(messageCreate, message);
+		return message;
+	}
+
+	public boolean updateMessageNoMerge(MessageCreate messageCreate, Message message) {
+		boolean update = basicService.updateBasicNoMerge(messageCreate, message);
+		if(messageCreate.getChat()!=null&&(message.getChat()==null||!messageCreate.getChat().getId().equals(message.getChat().getId()))){
+			message.setChat(messageCreate.getChat());
+			update=true;
+		}
+		if(messageCreate.getSender()!=null&&(message.getSender()==null||!messageCreate.getSender().getId().equals(message.getSender().getId()))){
+			message.setSender(messageCreate.getSender());
+			update=true;
+		}
+		return update;
+	}
+
+	public Message updateMessage(MessageUpdate messageUpdate, SecurityContextBase securityContext) {
+		Message Message = messageUpdate.getMessage();
+		if (updateMessageNoMerge(messageUpdate, Message)) {
+			messageRepository.merge(Message);
+		}
+		return Message;
+	}
+
+	public void validate(MessageCreate messageCreate, SecurityContextBase securityContext) {
+		basicService.validate(messageCreate,securityContext);
+		if(!(securityContext.getUser() instanceof ChatUser)){
+			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"must be a chat user");
+		}
+		messageCreate.setSender((ChatUser) securityContext.getUser());
+		String chatId=messageCreate.getChatId();
+		Chat chat=chatId!=null?getByIdOrNull(chatId,Chat.class, Chat_.security,securityContext):null;
+		if(chatId!=null&&chat==null){
+			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"no chat with id "+chatId);
+		}
+		messageCreate.setChat(chat);
+
+	}
+
+	public void validate(MessageFilter messageFilter, SecurityContextBase securityContext) {
+		basicService.validate(messageFilter, securityContext);
+
+
+	}
+
+	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+		return messageRepository.getByIdOrNull(id, c, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return messageRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+	}
+
+	public <T> T findByIdOrNull(Class<T> type, String id) {
+		return messageRepository.findByIdOrNull(type, id);
+	}
+
+	public PaginationResponse<Message> getAllMessages(MessageFilter MessageFilter, SecurityContextBase securityContext) {
+		List<Message> list = listAllMessages(MessageFilter, securityContext);
+		long count = messageRepository.countAllMessages(MessageFilter, securityContext);
+		return new PaginationResponse<>(list, MessageFilter, count);
+	}
+
+	public List<Message> listAllMessages(MessageFilter MessageFilter, SecurityContextBase securityContext) {
+		return messageRepository.listAllMessages(MessageFilter, securityContext);
+	}
+
+	public <T extends Baseclass> List<T> findByIds(Class<T> c, Set<String> requested) {
+		return messageRepository.findByIds(c, requested);
+	}
+
 }
