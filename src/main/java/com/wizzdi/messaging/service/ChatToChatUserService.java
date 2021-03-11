@@ -21,8 +21,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.persistence.metamodel.SingularAttribute;
-import java.util.List;
-import java.util.Set;
+import javax.ws.rs.BadRequestException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Extension
 @Component
@@ -52,6 +53,8 @@ public class ChatToChatUserService implements Plugin {
 	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
 		return chatToChatUserRepository.listByIds(c, ids, securityContext);
 	}
+
+
 
 	public ChatToChatUser createChatToChatUserNoMerge(ChatToChatUserCreate chatToChatUserCreate, SecurityContextBase securityContext) {
 		ChatToChatUser chatToChatUser = new ChatToChatUser();
@@ -102,6 +105,26 @@ public class ChatToChatUserService implements Plugin {
 
 	public void validate(ChatToChatUserFilter chatToChatUserFilter, SecurityContextBase securityContext) {
 		basicService.validate(chatToChatUserFilter, securityContext);
+		Set<String> chatIds=chatToChatUserFilter.getChatsIds();
+		Map<String,Chat> chatMap=chatIds.isEmpty()?new HashMap<>():chatToChatUserRepository.listByIds(Chat.class,chatIds,Chat_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
+		chatIds.removeAll(chatMap.keySet());
+		if(!chatIds.isEmpty()){
+			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chats with ids " + chatIds);
+		}
+		chatToChatUserFilter.setChats(new ArrayList<>(chatMap.values()));
+
+		Set<String> chatUserIds=chatToChatUserFilter.getChatUsersIds();
+		Map<String,ChatUser> chatUserMap=chatUserIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,chatUserIds,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
+		chatUserIds.removeAll(chatUserMap.keySet());
+		if(!chatUserIds.isEmpty()){
+			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat users with ids " + chatUserIds);
+		}
+		chatToChatUserFilter.setChatUsers(new ArrayList<>(chatUserMap.values()));
+
+		if(chatToChatUserFilter.getChatUsers().isEmpty()&&chatToChatUserFilter.getChats().isEmpty()){
+			throw new BadRequestException("must specify at least one chat or chat user");
+		}
+
 
 
 	}

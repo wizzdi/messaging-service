@@ -14,7 +14,7 @@ public class ChatToChatUserFilter extends PaginationFilter {
 
 	private BasicPropertiesFilter basicPropertiesFilter;
 
-	private Set<String> chatIds=new HashSet<>();
+	private Set<String> chatsIds =new HashSet<>();
 	@JsonIgnore
 	private List<Chat> chats;
 	private Set<String> chatUsersIds=new HashSet<>();
@@ -30,12 +30,12 @@ public class ChatToChatUserFilter extends PaginationFilter {
 		return (T) this;
 	}
 
-	public Set<String> getChatIds() {
-		return chatIds;
+	public Set<String> getChatsIds() {
+		return chatsIds;
 	}
 
-	public <T extends ChatToChatUserFilter> T setChatIds(Set<String> chatIds) {
-		this.chatIds = chatIds;
+	public <T extends ChatToChatUserFilter> T setChatsIds(Set<String> chatsIds) {
+		this.chatsIds = chatsIds;
 		return (T) this;
 	}
 

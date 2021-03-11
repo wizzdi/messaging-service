@@ -6,8 +6,7 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BaseclassRepository;
 import com.wizzdi.flexicore.security.data.BasicRepository;
-import com.wizzdi.messaging.model.ChatToChatUser;
-import com.wizzdi.messaging.model.ChatToChatUser_;
+import com.wizzdi.messaging.model.*;
 import com.wizzdi.messaging.request.ChatToChatUserFilter;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +21,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @Extension
@@ -51,7 +51,18 @@ public class ChatToChatUserRepository implements Plugin {
 		
 		if(chatToChatUserFilter.getBasicPropertiesFilter()!=null){
 			BasicRepository.addBasicPropertiesFilter(chatToChatUserFilter.getBasicPropertiesFilter(),cb,q,r,predicates);
+		}
 
+		if(chatToChatUserFilter.getChats()!=null&&!chatToChatUserFilter.getChats().isEmpty()){
+			Set<String> ids=chatToChatUserFilter.getChats().stream().map(f->f.getId()).collect(Collectors.toSet());
+			Join<T, Chat> join=r.join(ChatToChatUser_.chat);
+			predicates.add(join.get(Chat_.id).in(ids));
+		}
+
+		if(chatToChatUserFilter.getChatUsers()!=null&&!chatToChatUserFilter.getChatUsers().isEmpty()){
+			Set<String> ids=chatToChatUserFilter.getChatUsers().stream().map(f->f.getId()).collect(Collectors.toSet());
+			Join<T, ChatUser> join=r.join(ChatToChatUser_.chatUser);
+			predicates.add(join.get(ChatUser_.id).in(ids));
 		}
 
 
@@ -84,6 +95,10 @@ public class ChatToChatUserRepository implements Plugin {
 
 	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
 		return baseclassRepository.listByIds(c, ids, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return baseclassRepository.listByIds(c, ids, baseclassAttribute, securityContext);
 	}
 
 	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {

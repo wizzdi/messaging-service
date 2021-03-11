@@ -6,8 +6,7 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BaseclassRepository;
 import com.wizzdi.flexicore.security.data.BasicRepository;
-import com.wizzdi.messaging.model.Message;
-import com.wizzdi.messaging.model.Message_;
+import com.wizzdi.messaging.model.*;
 import com.wizzdi.messaging.request.MessageFilter;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +21,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @Extension
@@ -53,7 +53,17 @@ public class MessageRepository implements Plugin {
 			BasicRepository.addBasicPropertiesFilter(messageFilter.getBasicPropertiesFilter(),cb,q,r,predicates);
 
 		}
+		if(messageFilter.getChats()!=null&&!messageFilter.getChats().isEmpty()){
+			Set<String> ids=messageFilter.getChats().stream().map(f->f.getId()).collect(Collectors.toSet());
+			Join<T, Chat> join=r.join(Message_.chat);
+			predicates.add(join.get(Chat_.id).in(ids));
+		}
 
+		if(messageFilter.getSenders()!=null&&!messageFilter.getSenders().isEmpty()){
+			Set<String> ids=messageFilter.getSenders().stream().map(f->f.getId()).collect(Collectors.toSet());
+			Join<T, ChatUser> join=r.join(Message_.sender);
+			predicates.add(join.get(ChatUser_.id).in(ids));
+		}
 
 
 	}
@@ -84,6 +94,10 @@ public class MessageRepository implements Plugin {
 
 	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
 		return baseclassRepository.listByIds(c, ids, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return baseclassRepository.listByIds(c, ids, baseclassAttribute, securityContext);
 	}
 
 	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {

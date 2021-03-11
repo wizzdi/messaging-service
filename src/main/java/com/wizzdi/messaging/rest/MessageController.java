@@ -48,9 +48,13 @@ public class MessageController implements Plugin {
 
 	public Message updateMessage(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageUpdate messageUpdate, @Parameter(hidden = true) SecurityContextBase securityContext){
 		String id=messageUpdate.getId();
-		Message message=id!=null? messageService.getMessageByIdOrNull(id,Message.class,securityContext):null;
+		Message message=id!=null? messageService.findByIdOrNull(Message.class,id):null;
 		if(message==null){
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no Message user with id "+id);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no Message with id "+id);
+		}
+		if(!message.getSender().getId().equals(securityContext.getUser().getId())){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"not allowed to change message "+id);
+
 		}
 		messageUpdate.setMessage(message);
 		messageService.validate(messageUpdate,securityContext);

@@ -21,8 +21,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.persistence.metamodel.SingularAttribute;
-import java.util.List;
-import java.util.Set;
+import javax.ws.rs.BadRequestException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Extension
 @Component
@@ -99,6 +100,26 @@ public class MessageService implements Plugin {
 
 	public void validate(MessageFilter messageFilter, SecurityContextBase securityContext) {
 		basicService.validate(messageFilter, securityContext);
+		Set<String> chatIds=messageFilter.getChatsIds();
+		Map<String,Chat> chatMap=chatIds.isEmpty()?new HashMap<>():messageRepository.listByIds(Chat.class,chatIds,Chat_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
+		chatIds.removeAll(chatMap.keySet());
+		if(!chatIds.isEmpty()){
+			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chats with ids " + chatIds);
+		}
+		messageFilter.setChats(new ArrayList<>(chatMap.values()));
+
+		Set<String> senderIds=messageFilter.getSenderIds();
+		Map<String,ChatUser> chatUserMap=senderIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,senderIds,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
+		senderIds.removeAll(chatUserMap.keySet());
+		if(!senderIds.isEmpty()){
+			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
+		}
+		messageFilter.setSenders(new ArrayList<>(chatUserMap.values()));
+
+		if(messageFilter.getSenders().isEmpty()&&messageFilter.getChats().isEmpty()){
+			throw new BadRequestException("must specify at least one chat or chat user");
+		}
+
 
 
 	}
