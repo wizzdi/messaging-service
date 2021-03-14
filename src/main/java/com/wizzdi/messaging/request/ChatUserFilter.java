@@ -1,10 +1,12 @@
 package com.wizzdi.messaging.request;
 
+import com.wizzdi.flexicore.security.request.BasicPropertiesFilter;
 import com.wizzdi.flexicore.security.request.SecurityUserFilter;
 
 public class ChatUserFilter extends SecurityUserFilter {
 
 	private String userNameLike;
+	private BasicPropertiesFilter basicPropertiesFilter;
 
 
 	public String getUserNameLike() {
@@ -13,6 +15,15 @@ public class ChatUserFilter extends SecurityUserFilter {
 
 	public <T extends ChatUserFilter> T setUserNameLike(String userNameLike) {
 		this.userNameLike = userNameLike;
+		return (T) this;
+	}
+
+	public BasicPropertiesFilter getBasicPropertiesFilter() {
+		return basicPropertiesFilter;
+	}
+
+	public <T extends ChatUserFilter> T setBasicPropertiesFilter(BasicPropertiesFilter basicPropertiesFilter) {
+		this.basicPropertiesFilter = basicPropertiesFilter;
 		return (T) this;
 	}
 }

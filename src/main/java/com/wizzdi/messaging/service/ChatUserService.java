@@ -57,9 +57,8 @@ public class ChatUserService implements Plugin {
 	}
 
 	public boolean updateChatUserNoMerge(ChatUserCreate chatUserCreate, ChatUser chatUser) {
-		boolean update = securityUserService.updateSecurityUserNoMerge(chatUserCreate, chatUser);
+		return securityUserService.updateSecurityUserNoMerge(chatUserCreate, chatUser);
 
-		return update;
 	}
 
 	public ChatUser updateChatUser(ChatUserUpdate chatUserUpdate, SecurityContextBase securityContext) {

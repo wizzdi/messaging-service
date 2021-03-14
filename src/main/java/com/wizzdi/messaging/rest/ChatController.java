@@ -31,7 +31,7 @@ public class ChatController implements Plugin {
 
 	@PostMapping("/createChat")
 	@Operation(description = "creates Chat",summary = "creates Chat")
-	public Chat createChat(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatCreate chatCreate, @Parameter(hidden = true) SecurityContextBase securityContext){
+	public Chat createChat(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatCreate chatCreate, @RequestAttribute SecurityContextBase securityContext){
 		chatService.validate(chatCreate,securityContext);
 		return chatService.createChat(chatCreate,securityContext);
 	}
@@ -39,7 +39,7 @@ public class ChatController implements Plugin {
 	@PostMapping("/getAllChats")
 	@Operation(description = "returns Chats",summary = "returns Chats")
 
-	public PaginationResponse<Chat> getAllChats(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatFilter chatFilter, @Parameter(hidden = true) SecurityContextBase securityContext){
+	public PaginationResponse<Chat> getAllChats(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatFilter chatFilter, @RequestAttribute SecurityContextBase securityContext){
 		chatService.validate(chatFilter,securityContext);
 		return chatService.getAllChats(chatFilter,securityContext);
 	}
@@ -47,7 +47,7 @@ public class ChatController implements Plugin {
 	@PutMapping("/updateChat")
 	@Operation(description = "updates Chat",summary = "updates Chat")
 
-	public Chat updateChat(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatUpdate chatUpdate, @Parameter(hidden = true) SecurityContextBase securityContext){
+	public Chat updateChat(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatUpdate chatUpdate, @RequestAttribute SecurityContextBase securityContext){
 		String id=chatUpdate.getId();
 		Chat chat=id!=null? chatService.getChatByIdOrNull(id,Chat.class,securityContext):null;
 		if(chat==null){

@@ -7,6 +7,8 @@ import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.MessageRepository;
+import com.wizzdi.messaging.events.NewMessageEvent;
+import com.wizzdi.messaging.events.UpdatedMessageEvent;
 import com.wizzdi.messaging.model.Chat;
 import com.wizzdi.messaging.model.Chat_;
 import com.wizzdi.messaging.model.Message;
@@ -16,6 +18,7 @@ import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -36,10 +39,13 @@ public class MessageService implements Plugin {
 	@Autowired
 	private BasicService basicService;
 
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	public Message createMessage(MessageCreate messageCreate, SecurityContextBase securityContext) {
 		Message message = createMessageNoMerge(messageCreate, securityContext);
 		messageRepository.merge(message);
+		applicationEventPublisher.publishEvent(new NewMessageEvent(message));
 		return message;
 	}
 
@@ -72,15 +78,59 @@ public class MessageService implements Plugin {
 			message.setSender(messageCreate.getSender());
 			update=true;
 		}
+		if(messageCreate.getContent()!=null&&!messageCreate.getContent().equals(message.getContent())){
+			Map<String, Object> copy=new HashMap<>(message.getOther());
+			message.setOther(copy);
+			message.setContent(messageCreate.getContent());
+			update=true;
+		}
+		if(messageCreate.getMedia()!=null&&!messageCreate.getMedia().equals(message.getMedia())){
+			Map<String, Object> copy=new HashMap<>(message.getOther());
+			message.setOther(copy);
+			message.setMedia(messageCreate.getMedia());
+			update=true;
+		}
+		if(messageCreate.getChatUsers()!=null&&!messageCreate.getChatUsers().equals(message.getChatUsers())){
+			Map<String, Object> copy=new HashMap<>(message.getChatUsers());
+			message.setOther(copy);
+			message.setChatUsers(messageCreate.getChatUsers());
+			update=true;
+		}
+
+		if (messageCreate.getOther() != null && !messageCreate.getOther().isEmpty()) {
+			Map<String, Object> jsonNode = message.getOther();
+			if (jsonNode == null) {
+				message.setOther(messageCreate.getOther());
+				update = true;
+			} else {
+				Map<String, Object> copy=new HashMap<>(messageCreate.getOther());
+				for (Map.Entry<String, Object> entry : messageCreate.getOther().entrySet()) {
+					String key = entry.getKey();
+					Object newVal = entry.getValue();
+					Object val = jsonNode.get(key);
+					if (newVal!=null&&!newVal.equals(val)) {
+						copy.put(key, newVal);
+						update = true;
+					}
+				}
+				if(update){
+					message.setOther(copy);
+				}
+			}
+
+
+		}
 		return update;
 	}
 
 	public Message updateMessage(MessageUpdate messageUpdate, SecurityContextBase securityContext) {
-		Message Message = messageUpdate.getMessage();
-		if (updateMessageNoMerge(messageUpdate, Message)) {
-			messageRepository.merge(Message);
+		Message message = messageUpdate.getMessage();
+		if (updateMessageNoMerge(messageUpdate, message)) {
+			messageRepository.merge(message);
+			applicationEventPublisher.publishEvent(new UpdatedMessageEvent(message));
+
 		}
-		return Message;
+		return message;
 	}
 
 	public void validate(MessageCreate messageCreate, SecurityContextBase securityContext) {
@@ -115,6 +165,9 @@ public class MessageService implements Plugin {
 			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
 		}
 		messageFilter.setSenders(new ArrayList<>(chatUserMap.values()));
+		if(securityContext.getUser() instanceof ChatUser){
+			messageFilter.getSenders().add((ChatUser) securityContext.getUser());
+		}
 
 		if(messageFilter.getSenders().isEmpty()&&messageFilter.getChats().isEmpty()){
 			throw new BadRequestException("must specify at least one chat or chat user");

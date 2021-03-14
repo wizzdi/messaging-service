@@ -30,7 +30,7 @@ public class MessageController implements Plugin {
 
 	@PostMapping("/createMessage")
 	@Operation(description = "creates Message",summary = "creates Message")
-	public Message createMessage(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageCreate messageCreate, @Parameter(hidden = true) SecurityContextBase securityContext){
+	public Message createMessage(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageCreate messageCreate, @RequestAttribute SecurityContextBase securityContext){
 		messageService.validate(messageCreate,securityContext);
 		return messageService.createMessage(messageCreate,securityContext);
 	}
@@ -38,7 +38,7 @@ public class MessageController implements Plugin {
 	@PostMapping("/getAllMessages")
 	@Operation(description = "returns Messages",summary = "returns Messages")
 
-	public PaginationResponse<Message> getAllMessages(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageFilter messageFilter, @Parameter(hidden = true) SecurityContextBase securityContext){
+	public PaginationResponse<Message> getAllMessages(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageFilter messageFilter, @RequestAttribute SecurityContextBase securityContext){
 		messageService.validate(messageFilter,securityContext);
 		return messageService.getAllMessages(messageFilter,securityContext);
 	}
@@ -46,7 +46,7 @@ public class MessageController implements Plugin {
 	@PutMapping("/updateMessage")
 	@Operation(description = "updates Message",summary = "updates Message")
 
-	public Message updateMessage(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageUpdate messageUpdate, @Parameter(hidden = true) SecurityContextBase securityContext){
+	public Message updateMessage(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageUpdate messageUpdate, @RequestAttribute SecurityContextBase securityContext){
 		String id=messageUpdate.getId();
 		Message message=id!=null? messageService.findByIdOrNull(Message.class,id):null;
 		if(message==null){
