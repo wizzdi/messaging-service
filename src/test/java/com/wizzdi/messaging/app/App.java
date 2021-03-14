@@ -1,4 +1,4 @@
-package com.wizzdi.messaging;
+package com.wizzdi.messaging.app;
 
 import com.wizzdi.flexicore.boot.base.annotations.plugins.EnableFlexiCorePlugins;
 import com.wizzdi.flexicore.boot.jpa.annotations.EnableFlexiCoreJPAPlugins;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 @EnableFlexiCoreJPAPlugins
 @EnableFlexiCoreSecurity
 @EnableFlexiCoreRESTPlugins
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.wizzdi.messaging")
 public class App {
 
 

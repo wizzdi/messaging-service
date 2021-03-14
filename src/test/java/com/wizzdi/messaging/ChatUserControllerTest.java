@@ -4,14 +4,10 @@ package com.wizzdi.messaging;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.messaging.app.App;
-import com.wizzdi.messaging.app.SecurityInterceptor;
-import com.wizzdi.messaging.app.SecurityServiceTest;
 import com.wizzdi.messaging.model.ChatUser;
-import com.wizzdi.messaging.model.Message;
 import com.wizzdi.messaging.request.ChatUserCreate;
-import com.wizzdi.messaging.request.MessageCreate;
-import com.wizzdi.messaging.request.MessageFilter;
-import com.wizzdi.messaging.service.ChatUserService;
+import com.wizzdi.messaging.request.ChatUserFilter;
+import com.wizzdi.messaging.request.ChatUserUpdate;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,22 +31,18 @@ import java.util.concurrent.atomic.AtomicReference;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ActiveProfiles("test")
-public class MessageControllerTest {
+public class ChatUserControllerTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
-    private ChatUserService chatUserService;
-    @Autowired
     @Lazy
     @Qualifier("adminSecurityContext")
     private SecurityContextBase securityContextBase;
-    @Autowired
-    private SecurityServiceTest securityServiceTest;
+
 
 
     private ChatUser chatUser;
-    private Message message;
 
 
     @BeforeAll
@@ -62,40 +54,51 @@ public class MessageControllerTest {
                             .add("authenticationKey", reference.get());
                     return execution.execute(request, body);
                 }));
-        chatUser = chatUserService.createChatUser(new ChatUserCreate(), securityContextBase);
-        SecurityInterceptor.setSecurityContext(securityServiceTest.getSecurityContext(chatUser));
+
     }
 
     @Test
     @Order(1)
-    public void createMessage() throws InterruptedException {
-        MessageCreate request = new MessageCreate()
-                .setContent("test")
-                .setName("test message");
+    public void createChatUser() throws InterruptedException {
+        ChatUserCreate request = new ChatUserCreate()
+                .setName("test chatUser");
 
-        ParameterizedTypeReference<Message> t = new ParameterizedTypeReference<>() {};
-        ResponseEntity<Message> response = this.restTemplate.exchange("/message/createMessage", HttpMethod.POST, new HttpEntity<>(request), t);
+        ParameterizedTypeReference<ChatUser> t = new ParameterizedTypeReference<>() {};
+        ResponseEntity<ChatUser> response = this.restTemplate.exchange("/chatUser/createChatUser", HttpMethod.POST, new HttpEntity<>(request), t);
         Assertions.assertEquals(200, response.getStatusCodeValue());
-        message = response.getBody();
-        Assertions.assertNotNull(message);
-        Assertions.assertEquals(request.getName(),message.getName());
-        Assertions.assertEquals(request.getContent(),message.getContent());
-        Assertions.assertEquals(chatUser.getId(),message.getSender().getId());
+        chatUser = response.getBody();
+        Assertions.assertNotNull(chatUser);
+        Assertions.assertEquals(request.getName(),chatUser.getName());
 
 
     }
 
     @Test
     @Order(2)
-    public void testGetAllMessages() throws InterruptedException {
-        MessageFilter request = new MessageFilter();
-        ParameterizedTypeReference<PaginationResponse<Message>> t = new ParameterizedTypeReference<>() {};
-        ResponseEntity<PaginationResponse<Message>> response = this.restTemplate.exchange("/message/getAllMessages", HttpMethod.POST, new HttpEntity<>(request), t);
+    public void testGetAllChatUsers() throws InterruptedException {
+        ChatUserFilter request = new ChatUserFilter();
+        ParameterizedTypeReference<PaginationResponse<ChatUser>> t = new ParameterizedTypeReference<>() {};
+        ResponseEntity<PaginationResponse<ChatUser>> response = this.restTemplate.exchange("/chatUser/getAllChatUsers", HttpMethod.POST, new HttpEntity<>(request), t);
         Assertions.assertEquals(200, response.getStatusCodeValue());
-        PaginationResponse<Message> body = response.getBody();
+        PaginationResponse<ChatUser> body = response.getBody();
         Assertions.assertNotNull(body);
-        List<Message> messages = body.getList();
-        Assertions.assertTrue(messages.stream().anyMatch(f->f.getId().equals(message.getId())));
+        List<ChatUser> chatUsers = body.getList();
+        Assertions.assertTrue(chatUsers.stream().anyMatch(f->f.getId().equals(chatUser.getId())));
+
+    }
+
+    @Test
+    @Order(3)
+    public void testUpdateChatUser() throws InterruptedException {
+        ChatUserUpdate request = new ChatUserUpdate()
+                .setId(chatUser.getId())
+                .setName("new name");
+        ParameterizedTypeReference<ChatUser> t = new ParameterizedTypeReference<>() {};
+        ResponseEntity<ChatUser> response = this.restTemplate.exchange("/chatUser/updateChatUser", HttpMethod.PUT, new HttpEntity<>(request), t);
+        Assertions.assertEquals(200, response.getStatusCodeValue());
+        chatUser= response.getBody();
+        Assertions.assertNotNull(chatUser);
+        Assertions.assertEquals(request.getName(),chatUser.getName());
 
     }
 

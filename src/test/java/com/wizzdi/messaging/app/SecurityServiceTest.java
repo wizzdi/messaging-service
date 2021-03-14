@@ -1,4 +1,4 @@
-package com.wizzdi.messaging;
+package com.wizzdi.messaging.app;
 
 import com.flexicore.model.Role;
 import com.flexicore.model.SecurityTenant;

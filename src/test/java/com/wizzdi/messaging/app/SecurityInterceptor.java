@@ -1,4 +1,4 @@
-package com.wizzdi.messaging;
+package com.wizzdi.messaging.app;
 
 import com.flexicore.security.SecurityContextBase;
 import org.springframework.beans.factory.InitializingBean;

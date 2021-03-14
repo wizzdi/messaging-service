@@ -1,4 +1,4 @@
-package com.wizzdi.messaging;
+package com.wizzdi.messaging.app;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
