@@ -13,6 +13,7 @@ public class ChatToChatUserCreate extends BasicCreate {
 	private String chatUserId;
 	@JsonIgnore
 	private ChatUser chatUser;
+	private Boolean disabled;
 
 	public String getChatId() {
 		return chatId;
@@ -49,6 +50,15 @@ public class ChatToChatUserCreate extends BasicCreate {
 
 	public <T extends ChatToChatUserCreate> T setChatUser(ChatUser chatUser) {
 		this.chatUser = chatUser;
+		return (T) this;
+	}
+
+	public Boolean getDisabled() {
+		return disabled;
+	}
+
+	public <T extends ChatToChatUserCreate> T setDisabled(Boolean disabled) {
+		this.disabled = disabled;
 		return (T) this;
 	}
 }

@@ -74,6 +74,10 @@ public class ChatToChatUserService implements Plugin {
 			chatToChatUser.setChat(chatToChatUserCreate.getChat());
 			update = true;
 		}
+		if (chatToChatUserCreate.getDisabled() != null && !chatToChatUserCreate.getDisabled().equals(chatToChatUser.isDisabled())) {
+			chatToChatUser.setDisabled(chatToChatUserCreate.getDisabled());
+			update = true;
+		}
 		return update;
 	}
 
