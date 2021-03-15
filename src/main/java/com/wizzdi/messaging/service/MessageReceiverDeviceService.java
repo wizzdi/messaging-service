@@ -1,12 +1,14 @@
 package com.wizzdi.messaging.service;
 
 import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.MessageReceiverDeviceRepository;
 import com.wizzdi.messaging.model.ChatUser;
+import com.wizzdi.messaging.model.ChatUser_;
 import com.wizzdi.messaging.model.MessageReceiverDevice;
 import com.wizzdi.messaging.model.MessageReceiverDevice;
 import com.wizzdi.messaging.request.MessageReceiverDeviceCreate;
@@ -18,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
+import javax.persistence.metamodel.SingularAttribute;
+import javax.ws.rs.BadRequestException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +36,8 @@ public class MessageReceiverDeviceService implements Plugin {
 	private MessageReceiverDeviceRepository messageReceiverDeviceRepository;
 	@Autowired
 	private BasicService basicService;
+	@Autowired
+	private ChatUserService chatUserService;
 
 
 	public MessageReceiverDevice createMessageReceiverDevice(MessageReceiverDeviceCreate messageReceiverDeviceCreate, SecurityContextBase securityContext) {
@@ -83,13 +89,18 @@ public class MessageReceiverDeviceService implements Plugin {
 	public void validate(MessageReceiverDeviceCreate messageReceiverDeviceCreate, SecurityContextBase securityContext) {
 		basicService.validate(messageReceiverDeviceCreate,securityContext);
 		String ownerId=messageReceiverDeviceCreate.getOwnerId();
-		ChatUser owner=ownerId!=null?getByIdOrNull(ownerId,ChatUser.class,securityContext):null;
+		ChatUser owner=ownerId!=null?getByIdOrNull(ownerId,ChatUser.class, ChatUser_.security,securityContext):null;
 		if(ownerId!=null&&owner==null){
 			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"no owner with id "+ownerId);
 		}
 		messageReceiverDeviceCreate.setOwner(owner);
-		if(messageReceiverDeviceCreate.getOwner()==null&&securityContext.getUser() instanceof ChatUser){
-			messageReceiverDeviceCreate.setOwner((ChatUser) securityContext.getUser());
+		if(messageReceiverDeviceCreate.getOwner()==null){
+			ChatUser chatUser = chatUserService.getChatUser(securityContext);
+			messageReceiverDeviceCreate.setOwner(chatUser);
+		}
+		if(messageReceiverDeviceCreate.getOwner()==null){
+			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"Chat User cannot found from user "+securityContext.getUser().getName());
+
 		}
 	}
 
@@ -103,6 +114,17 @@ public class MessageReceiverDeviceService implements Plugin {
 		return messageReceiverDeviceRepository.getByIdOrNull(id, c, securityContext);
 	}
 
+	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return messageReceiverDeviceRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return messageReceiverDeviceRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+		return messageReceiverDeviceRepository.findByIds(c, ids, idAttribute);
+	}
 
 	public PaginationResponse<MessageReceiverDevice> getAllMessageReceiverDevices(MessageReceiverDeviceFilter MessageReceiverDeviceFilter, SecurityContextBase securityContext) {
 		List<MessageReceiverDevice> list = listAllMessageReceiverDevices(MessageReceiverDeviceFilter, securityContext);

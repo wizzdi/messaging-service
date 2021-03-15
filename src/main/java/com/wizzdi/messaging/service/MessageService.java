@@ -9,14 +9,13 @@ import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.MessageRepository;
 import com.wizzdi.messaging.events.NewMessageEvent;
 import com.wizzdi.messaging.events.UpdatedMessageEvent;
-import com.wizzdi.messaging.model.Chat;
-import com.wizzdi.messaging.model.Chat_;
-import com.wizzdi.messaging.model.Message;
-import com.wizzdi.messaging.model.ChatUser;
+import com.wizzdi.messaging.interfaces.ChatUserProvider;
+import com.wizzdi.messaging.model.*;
 import com.wizzdi.messaging.request.MessageCreate;
 import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
 import org.pf4j.Extension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -41,11 +40,13 @@ public class MessageService implements Plugin {
 
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
+	@Autowired
+	private ChatUserService chatUserService;
 
 	public Message createMessage(MessageCreate messageCreate, SecurityContextBase securityContext) {
 		Message message = createMessageNoMerge(messageCreate, securityContext);
 		messageRepository.merge(message);
-		applicationEventPublisher.publishEvent(new NewMessageEvent(message));
+		applicationEventPublisher.publishEvent(new NewMessageEvent(message,securityContext));
 		return message;
 	}
 
@@ -59,6 +60,10 @@ public class MessageService implements Plugin {
 
 	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
 		return messageRepository.listByIds(c, ids, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return messageRepository.listByIds(c, ids, baseclassAttribute, securityContext);
 	}
 
 	public Message createMessageNoMerge(MessageCreate messageCreate, SecurityContextBase securityContext) {
@@ -135,10 +140,14 @@ public class MessageService implements Plugin {
 
 	public void validate(MessageCreate messageCreate, SecurityContextBase securityContext) {
 		basicService.validate(messageCreate,securityContext);
-		if(!(securityContext.getUser() instanceof ChatUser)){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"must be a chat user");
+		if(messageCreate.getSender()==null){
+			ChatUser chatUser = chatUserService.getChatUser(securityContext);
+			if(chatUser==null){
+				throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"must be a chat user");
+			}
+			messageCreate.setSender(chatUser);
+
 		}
-		messageCreate.setSender((ChatUser) securityContext.getUser());
 		String chatId=messageCreate.getChatId();
 		Chat chat=chatId!=null?getByIdOrNull(chatId,Chat.class, Chat_.security,securityContext):null;
 		if(chatId!=null&&chat==null){
@@ -147,6 +156,8 @@ public class MessageService implements Plugin {
 		messageCreate.setChat(chat);
 
 	}
+
+
 
 	public void validate(MessageFilter messageFilter, SecurityContextBase securityContext) {
 		basicService.validate(messageFilter, securityContext);
@@ -159,14 +170,15 @@ public class MessageService implements Plugin {
 		messageFilter.setChats(new ArrayList<>(chatMap.values()));
 
 		Set<String> senderIds=messageFilter.getSenderIds();
-		Map<String,ChatUser> chatUserMap=senderIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,senderIds,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
+		Map<String,ChatUser> chatUserMap=senderIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,senderIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
 		senderIds.removeAll(chatUserMap.keySet());
 		if(!senderIds.isEmpty()){
 			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
 		}
 		messageFilter.setSenders(new ArrayList<>(chatUserMap.values()));
-		if(securityContext.getUser() instanceof ChatUser){
-			messageFilter.getSenders().add((ChatUser) securityContext.getUser());
+		ChatUser chatUser = chatUserService.getChatUser(securityContext);
+		if(chatUser!=null){
+			messageFilter.getSenders().add(chatUser);
 		}
 
 		if(messageFilter.getSenders().isEmpty()&&messageFilter.getChats().isEmpty()){

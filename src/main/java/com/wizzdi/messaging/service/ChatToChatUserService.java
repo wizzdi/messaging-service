@@ -7,10 +7,7 @@ import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.ChatToChatUserRepository;
-import com.wizzdi.messaging.model.Chat;
-import com.wizzdi.messaging.model.ChatToChatUser;
-import com.wizzdi.messaging.model.ChatUser;
-import com.wizzdi.messaging.model.Chat_;
+import com.wizzdi.messaging.model.*;
 import com.wizzdi.messaging.request.ChatToChatUserCreate;
 import com.wizzdi.messaging.request.ChatToChatUserFilter;
 import com.wizzdi.messaging.request.ChatToChatUserUpdate;
@@ -54,7 +51,9 @@ public class ChatToChatUserService implements Plugin {
 		return chatToChatUserRepository.listByIds(c, ids, securityContext);
 	}
 
-
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return chatToChatUserRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+	}
 
 	public ChatToChatUser createChatToChatUserNoMerge(ChatToChatUserCreate chatToChatUserCreate, SecurityContextBase securityContext) {
 		ChatToChatUser chatToChatUser = new ChatToChatUser();
@@ -99,7 +98,7 @@ public class ChatToChatUserService implements Plugin {
 		chatToChatUserCreate.setChat(chat);
 
 		String chatUserId = chatToChatUserCreate.getChatUserId();
-		ChatUser chatUser = chatUserId != null ? getByIdOrNull(chatUserId, ChatUser.class, securityContext) : null;
+		ChatUser chatUser = chatUserId != null ? getByIdOrNull(chatUserId, ChatUser.class, ChatUser_.security, securityContext) : null;
 		if (chatUserId != null && chatUser == null) {
 			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chatUser with id " + chatUserId);
 		}
@@ -118,7 +117,7 @@ public class ChatToChatUserService implements Plugin {
 		chatToChatUserFilter.setChats(new ArrayList<>(chatMap.values()));
 
 		Set<String> chatUserIds=chatToChatUserFilter.getChatUsersIds();
-		Map<String,ChatUser> chatUserMap=chatUserIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,chatUserIds,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
+		Map<String,ChatUser> chatUserMap=chatUserIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,chatUserIds,ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
 		chatUserIds.removeAll(chatUserMap.keySet());
 		if(!chatUserIds.isEmpty()){
 			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat users with ids " + chatUserIds);

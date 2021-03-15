@@ -52,7 +52,8 @@ public class ChatUserRepository implements Plugin {
 
 		}
 		if(securityContext!=null){
-			baseclassRepository.addBaseclassPredicates( cb, q, r, predicates, securityContext);
+			Join<T,Baseclass> join=r.join(ChatUser_.security);
+			baseclassRepository.addBaseclassPredicates( cb, q, join, predicates, securityContext);
 
 		}
 
@@ -96,6 +97,6 @@ public class ChatUserRepository implements Plugin {
 	}
 
 	public <T extends ChatUser> T getChatUserByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
-		return baseclassRepository.getByIdOrNull(id, c, securityContext);
+		return baseclassRepository.getByIdOrNull(id, c,ChatUser_.security, securityContext);
 	}
 }

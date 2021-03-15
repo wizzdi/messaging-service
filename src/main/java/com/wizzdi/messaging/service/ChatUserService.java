@@ -4,18 +4,22 @@ import com.flexicore.model.Baseclass;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.flexicore.security.service.SecurityUserService;
 import com.wizzdi.messaging.data.ChatUserRepository;
+import com.wizzdi.messaging.interfaces.ChatUserProvider;
 import com.wizzdi.messaging.model.ChatUser;
 import com.wizzdi.messaging.request.ChatUserCreate;
 import com.wizzdi.messaging.request.ChatUserFilter;
 import com.wizzdi.messaging.request.ChatUserUpdate;
 import org.pf4j.Extension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -28,12 +32,19 @@ public class ChatUserService implements Plugin {
 	@Autowired
 	private ChatUserRepository chatUserRepository;
 	@Autowired
-	private SecurityUserService securityUserService;
+	private BasicService basicService;
+	@Autowired
+	private ObjectProvider<ChatUserProvider<?>> chatUserProviders;
 
+	public ChatUser getChatUser(SecurityContextBase securityContext) {
+		return chatUserProviders.stream().filter(f -> f.getType().equals(securityContext.getUser().getClass())).findFirst().map(f -> f.getChatUser(securityContext)).orElse(null);
+	}
 
 	public ChatUser createChatUser(ChatUserCreate chatUserCreate, SecurityContextBase securityContext) {
 		ChatUser chatUser = createChatUserNoMerge(chatUserCreate, securityContext);
-		chatUserRepository.merge(chatUser);
+		Baseclass baseclass=new Baseclass(chatUser.getName(),securityContext);
+		chatUser.setSecurity(baseclass);
+		chatUserRepository.massMerge(Arrays.asList(baseclass,chatUser));
 		return chatUser;
 	}
 
@@ -57,7 +68,7 @@ public class ChatUserService implements Plugin {
 	}
 
 	public boolean updateChatUserNoMerge(ChatUserCreate chatUserCreate, ChatUser chatUser) {
-		return securityUserService.updateSecurityUserNoMerge(chatUserCreate, chatUser);
+		return basicService.updateBasicNoMerge(chatUserCreate, chatUser);
 
 	}
 
@@ -70,12 +81,12 @@ public class ChatUserService implements Plugin {
 	}
 
 	public void validate(ChatUserCreate chatUserCreate, SecurityContextBase securityContext) {
-		securityUserService.validate(chatUserCreate,securityContext);
+		basicService.validate(chatUserCreate,securityContext);
 
 	}
 
 	public void validate(ChatUserFilter chatUserFilter, SecurityContextBase securityContext) {
-		securityUserService.validate(chatUserFilter, securityContext);
+		basicService.validate(chatUserFilter, securityContext);
 
 
 	}

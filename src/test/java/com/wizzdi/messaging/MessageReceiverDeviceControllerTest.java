@@ -64,7 +64,7 @@ public class MessageReceiverDeviceControllerTest {
                     return execution.execute(request, body);
                 }));
         chatUser = chatUserService.createChatUser(new ChatUserCreate(), securityContextBase);
-        SecurityInterceptor.setSecurityContext(securityServiceTest.getSecurityContext(chatUser));
+        SecurityInterceptor.setChatUser(chatUser);
     }
 
     @Test

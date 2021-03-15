@@ -52,9 +52,6 @@ public class MessageReceiverDeviceController implements Plugin {
 		if(messageReceiverDevice==null){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no MessageReceiverDevice user with id "+id);
 		}
-		if(messageReceiverDevice.getOwner()==null||!securityContext.getUser().getId().equals(messageReceiverDevice.getOwner().getId())){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"cannot update device , must be owner");
-		}
 		messageReceiverDeviceUpdate.setMessageReceiverDevice(messageReceiverDevice);
 		messageReceiverDeviceService.validate(messageReceiverDeviceUpdate,securityContext);
 		return messageReceiverDeviceService.updateMessageReceiverDevice(messageReceiverDeviceUpdate,securityContext);

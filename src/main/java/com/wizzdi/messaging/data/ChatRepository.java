@@ -1,6 +1,7 @@
 package com.wizzdi.messaging.data;
 
 import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BaseclassRepository;
@@ -17,6 +18,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -98,5 +100,21 @@ public class ChatRepository implements Plugin {
 
 	public <T extends Chat> T getChatByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
 		return baseclassRepository.getByIdOrNull(id, c,Chat_.security, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return baseclassRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return baseclassRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+		return baseclassRepository.findByIds(c, ids, idAttribute);
+	}
+
+	public <T> T findByIdOrNull(Class<T> type, String id) {
+		return baseclassRepository.findByIdOrNull(type, id);
 	}
 }

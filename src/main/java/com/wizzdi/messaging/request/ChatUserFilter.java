@@ -1,9 +1,9 @@
 package com.wizzdi.messaging.request;
 
 import com.wizzdi.flexicore.security.request.BasicPropertiesFilter;
-import com.wizzdi.flexicore.security.request.SecurityUserFilter;
+import com.wizzdi.flexicore.security.request.PaginationFilter;
 
-public class ChatUserFilter extends SecurityUserFilter {
+public class ChatUserFilter extends PaginationFilter {
 
 	private String userNameLike;
 	private BasicPropertiesFilter basicPropertiesFilter;

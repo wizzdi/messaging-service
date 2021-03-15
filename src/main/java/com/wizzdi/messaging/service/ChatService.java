@@ -2,6 +2,7 @@ package com.wizzdi.messaging.service;
 
 import com.flexicore.model.Baseclass;
 
+import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
@@ -9,6 +10,7 @@ import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.ChatRepository;
 import com.wizzdi.messaging.model.Chat;
 import com.wizzdi.messaging.model.ChatUser;
+import com.wizzdi.messaging.model.ChatUser_;
 import com.wizzdi.messaging.request.ChatCreate;
 import com.wizzdi.messaging.request.ChatFilter;
 import com.wizzdi.messaging.request.ChatUpdate;
@@ -18,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +35,9 @@ public class ChatService implements Plugin {
 	private ChatRepository chatRepository;
 	@Autowired
 	private BasicService basicService;
+
+	@Autowired
+	private ChatUserService chatUserService;
 
 
 	public Chat createChat(ChatCreate chatCreate, SecurityContextBase securityContext) {
@@ -81,13 +87,17 @@ public class ChatService implements Plugin {
 	public void validate(ChatCreate chatCreate, SecurityContextBase securityContext) {
 		basicService.validate(chatCreate,securityContext);
 		String ownerId=chatCreate.getOwnerId();
-		ChatUser owner=ownerId!=null?getByIdOrNull(ownerId,ChatUser.class,securityContext):null;
+		ChatUser owner=ownerId!=null?getByIdOrNull(ownerId,ChatUser.class, ChatUser_.security,securityContext):null;
 		if(ownerId!=null&&owner==null){
 			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"no owner with id "+ownerId);
 		}
 		chatCreate.setOwner(owner);
-		if(chatCreate.getOwner()==null&&securityContext.getUser() instanceof ChatUser){
-			chatCreate.setOwner((ChatUser) securityContext.getUser());
+		if(chatCreate.getOwner()==null){
+			ChatUser chatUser= chatUserService.getChatUser(securityContext);
+			if(chatUser==null){
+				throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"cannot find chat user from user "+securityContext.getUser().getName());
+			}
+			chatCreate.setOwner(chatUser);
 		}
 	}
 
@@ -95,6 +105,22 @@ public class ChatService implements Plugin {
 		basicService.validate(chatFilter, securityContext);
 
 
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return chatRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return chatRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+		return chatRepository.findByIds(c, ids, idAttribute);
+	}
+
+	public <T> T findByIdOrNull(Class<T> type, String id) {
+		return chatRepository.findByIdOrNull(type, id);
 	}
 
 	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
