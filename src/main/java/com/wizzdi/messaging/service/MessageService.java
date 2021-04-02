@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.metamodel.SingularAttribute;
 import javax.ws.rs.BadRequestException;
@@ -143,7 +143,7 @@ public class MessageService implements Plugin {
 		if(messageCreate.getSender()==null){
 			ChatUser chatUser = chatUserService.getChatUser(securityContext);
 			if(chatUser==null){
-				throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"must be a chat user");
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"must be a chat user");
 			}
 			messageCreate.setSender(chatUser);
 
@@ -151,7 +151,7 @@ public class MessageService implements Plugin {
 		String chatId=messageCreate.getChatId();
 		Chat chat=chatId!=null?getByIdOrNull(chatId,Chat.class, Chat_.security,securityContext):null;
 		if(chatId!=null&&chat==null){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"no chat with id "+chatId);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no chat with id "+chatId);
 		}
 		messageCreate.setChat(chat);
 
@@ -165,7 +165,7 @@ public class MessageService implements Plugin {
 		Map<String,Chat> chatMap=chatIds.isEmpty()?new HashMap<>():messageRepository.listByIds(Chat.class,chatIds,Chat_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
 		chatIds.removeAll(chatMap.keySet());
 		if(!chatIds.isEmpty()){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chats with ids " + chatIds);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chats with ids " + chatIds);
 		}
 		messageFilter.setChats(new ArrayList<>(chatMap.values()));
 
@@ -173,7 +173,7 @@ public class MessageService implements Plugin {
 		Map<String,ChatUser> chatUserMap=senderIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,senderIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
 		senderIds.removeAll(chatUserMap.keySet());
 		if(!senderIds.isEmpty()){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
 		}
 		messageFilter.setSenders(new ArrayList<>(chatUserMap.values()));
 		ChatUser chatUser = chatUserService.getChatUser(securityContext);

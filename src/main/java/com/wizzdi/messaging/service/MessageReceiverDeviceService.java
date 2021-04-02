@@ -18,7 +18,7 @@ import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.metamodel.SingularAttribute;
 import javax.ws.rs.BadRequestException;
@@ -91,7 +91,7 @@ public class MessageReceiverDeviceService implements Plugin {
 		String ownerId=messageReceiverDeviceCreate.getOwnerId();
 		ChatUser owner=ownerId!=null?getByIdOrNull(ownerId,ChatUser.class, ChatUser_.security,securityContext):null;
 		if(ownerId!=null&&owner==null){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"no owner with id "+ownerId);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no owner with id "+ownerId);
 		}
 		messageReceiverDeviceCreate.setOwner(owner);
 		if(messageReceiverDeviceCreate.getOwner()==null){
@@ -99,7 +99,7 @@ public class MessageReceiverDeviceService implements Plugin {
 			messageReceiverDeviceCreate.setOwner(chatUser);
 		}
 		if(messageReceiverDeviceCreate.getOwner()==null){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"Chat User cannot found from user "+securityContext.getUser().getName());
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Chat User cannot found from user "+securityContext.getUser().getName());
 
 		}
 	}

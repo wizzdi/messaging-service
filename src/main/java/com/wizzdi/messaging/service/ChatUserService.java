@@ -15,9 +15,10 @@ import com.wizzdi.messaging.request.ChatUserUpdate;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +37,11 @@ public class ChatUserService implements Plugin {
 	@Autowired
 	private ObjectProvider<ChatUserProvider<?>> chatUserProviders;
 
+	@Autowired
+	private ApplicationContext applicationContext;
+
 	public ChatUser getChatUser(SecurityContextBase securityContext) {
-		return chatUserProviders.stream().filter(f -> f.getType().equals(securityContext.getUser().getClass())).findFirst().map(f -> f.getChatUser(securityContext)).orElse(null);
+		return chatUserProviders.stream().filter(f -> f.getType().isAssignableFrom(securityContext.getUser().getClass())).findFirst().map(f -> f.getChatUser(securityContext)).orElse(null);
 	}
 
 	public ChatUser createChatUser(ChatUserCreate chatUserCreate, SecurityContextBase securityContext) {

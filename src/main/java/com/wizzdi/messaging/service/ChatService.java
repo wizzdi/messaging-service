@@ -18,7 +18,7 @@ import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.Arrays;
@@ -42,9 +42,7 @@ public class ChatService implements Plugin {
 
 	public Chat createChat(ChatCreate chatCreate, SecurityContextBase securityContext) {
 		Chat chat = createChatNoMerge(chatCreate, securityContext);
-		Baseclass baseclass=new Baseclass(chat.getName(),securityContext);
-		chat.setSecurity(baseclass);
-		chatRepository.massMerge(Arrays.asList(chat,baseclass));
+		chatRepository.merge(chat);
 		return chat;
 	}
 
@@ -63,6 +61,9 @@ public class ChatService implements Plugin {
 	public Chat createChatNoMerge(ChatCreate chatCreate, SecurityContextBase securityContext) {
 		Chat chat = new Chat();
 		chat.setId(Baseclass.getBase64ID());
+		Baseclass baseclass=new Baseclass(chat.getName(),securityContext);
+		baseclass.setClazz(Baseclass.getClazzByName(Chat.class.getCanonicalName()));
+		chat.setSecurity(baseclass);
 		updateChatNoMerge(chatCreate, chat);
 		return chat;
 	}
@@ -89,13 +90,13 @@ public class ChatService implements Plugin {
 		String ownerId=chatCreate.getOwnerId();
 		ChatUser owner=ownerId!=null?getByIdOrNull(ownerId,ChatUser.class, ChatUser_.security,securityContext):null;
 		if(ownerId!=null&&owner==null){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"no owner with id "+ownerId);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no owner with id "+ownerId);
 		}
 		chatCreate.setOwner(owner);
 		if(chatCreate.getOwner()==null){
 			ChatUser chatUser= chatUserService.getChatUser(securityContext);
 			if(chatUser==null){
-				throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"cannot find chat user from user "+securityContext.getUser().getName());
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"cannot find chat user from user "+securityContext.getUser().getName());
 			}
 			chatCreate.setOwner(chatUser);
 		}

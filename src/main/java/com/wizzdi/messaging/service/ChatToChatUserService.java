@@ -15,7 +15,7 @@ import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.metamodel.SingularAttribute;
 import javax.ws.rs.BadRequestException;
@@ -93,14 +93,14 @@ public class ChatToChatUserService implements Plugin {
 		String chatId = chatToChatUserCreate.getChatId();
 		Chat chat = chatId != null ? getByIdOrNull(chatId, Chat.class, Chat_.security, securityContext) : null;
 		if (chatId != null && chat == null) {
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat with id " + chatId);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat with id " + chatId);
 		}
 		chatToChatUserCreate.setChat(chat);
 
 		String chatUserId = chatToChatUserCreate.getChatUserId();
 		ChatUser chatUser = chatUserId != null ? getByIdOrNull(chatUserId, ChatUser.class, ChatUser_.security, securityContext) : null;
 		if (chatUserId != null && chatUser == null) {
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chatUser with id " + chatUserId);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chatUser with id " + chatUserId);
 		}
 		chatToChatUserCreate.setChatUser(chatUser);
 
@@ -112,7 +112,7 @@ public class ChatToChatUserService implements Plugin {
 		Map<String,Chat> chatMap=chatIds.isEmpty()?new HashMap<>():chatToChatUserRepository.listByIds(Chat.class,chatIds,Chat_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
 		chatIds.removeAll(chatMap.keySet());
 		if(!chatIds.isEmpty()){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chats with ids " + chatIds);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chats with ids " + chatIds);
 		}
 		chatToChatUserFilter.setChats(new ArrayList<>(chatMap.values()));
 
@@ -120,7 +120,7 @@ public class ChatToChatUserService implements Plugin {
 		Map<String,ChatUser> chatUserMap=chatUserIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,chatUserIds,ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(),f->f));
 		chatUserIds.removeAll(chatUserMap.keySet());
 		if(!chatUserIds.isEmpty()){
-			throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "no chat users with ids " + chatUserIds);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + chatUserIds);
 		}
 		chatToChatUserFilter.setChatUsers(new ArrayList<>(chatUserMap.values()));
 
