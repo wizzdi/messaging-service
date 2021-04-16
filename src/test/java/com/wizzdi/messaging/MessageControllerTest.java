@@ -6,6 +6,7 @@ import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.messaging.app.App;
 import com.wizzdi.messaging.app.SecurityInterceptor;
 import com.wizzdi.messaging.app.SecurityServiceTest;
+import com.wizzdi.messaging.model.Chat;
 import com.wizzdi.messaging.model.ChatUser;
 import com.wizzdi.messaging.model.Message;
 import com.wizzdi.messaging.request.ChatUserCreate;
@@ -47,6 +48,8 @@ public class MessageControllerTest {
     private SecurityContextBase securityContextBase;
     @Autowired
     private SecurityServiceTest securityServiceTest;
+    @Autowired
+    private Chat chat;
 
 
     private ChatUser chatUser;
@@ -70,6 +73,7 @@ public class MessageControllerTest {
     @Order(1)
     public void createMessage() throws InterruptedException {
         MessageCreate request = new MessageCreate()
+                .setChatId(chat.getId())
                 .setContent("test")
                 .setName("test message");
 
@@ -89,6 +93,7 @@ public class MessageControllerTest {
     @Order(2)
     public void testGetAllMessages() throws InterruptedException {
         MessageFilter request = new MessageFilter();
+        request.setChatsIds(Collections.singleton(chat.getId()));
         ParameterizedTypeReference<PaginationResponse<Message>> t = new ParameterizedTypeReference<>() {};
         ResponseEntity<PaginationResponse<Message>> response = this.restTemplate.exchange("/message/getAllMessages", HttpMethod.POST, new HttpEntity<>(request), t);
         Assertions.assertEquals(200, response.getStatusCodeValue());

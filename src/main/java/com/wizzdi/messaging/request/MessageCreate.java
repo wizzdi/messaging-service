@@ -9,13 +9,14 @@ import com.wizzdi.messaging.model.ChatUser;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class MessageCreate extends BasicCreate {
 
 	private Map<String, OffsetDateTime> chatUsers;
-	private Set<String> media;
+	private List<String> media;
 	private String content;
 	@JsonIgnore
 	private Map<String, Object> other = new HashMap<>();
@@ -80,11 +81,11 @@ public class MessageCreate extends BasicCreate {
 		return (T) this;
 	}
 
-	public Set<String> getMedia() {
+	public List<String> getMedia() {
 		return media;
 	}
 
-	public <T extends MessageCreate> T setMedia(Set<String> media) {
+	public <T extends MessageCreate> T setMedia(List<String> media) {
 		this.media = media;
 		return (T) this;
 	}

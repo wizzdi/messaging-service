@@ -81,15 +81,13 @@ public class MessageRepository implements Plugin {
 	}
 
 	@Transactional
-	public void merge(Object o) {
-		em.merge(o);
+	public void merge(Object base) {
+		basicRepository.merge(base);
 	}
 
 	@Transactional
-	public void massMerge(List<Object> list) {
-		for (Object o : list) {
-			em.merge(o);
-		}
+	public void massMerge(List<?> toMerge) {
+		basicRepository.massMerge(toMerge);
 	}
 
 	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {

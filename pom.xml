@@ -13,7 +13,6 @@
         <version.compiler.plugin>3.3</version.compiler.plugin>
         <version.eclipselink>2.7.7</version.eclipselink>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <pf4j-spring.version>0.7.0</pf4j-spring.version>
 
     </properties>
     <dependencyManagement>
@@ -22,6 +21,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>2.3.0.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.wizzdi</groupId>
+                <artifactId>flexicore-boot-dependencies</artifactId>
+                <version>1.0.5</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -40,25 +46,21 @@
         <dependency>
             <groupId>com.wizzdi</groupId>
             <artifactId>flexicore-boot</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.wizzdi</groupId>
             <artifactId>flexicore-boot-starter-web</artifactId>
-            <version>1.0.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.wizzdi</groupId>
             <artifactId>flexicore-security-model</artifactId>
-            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.wizzdi</groupId>
             <artifactId>flexicore-security-service</artifactId>
-            <version>1.0.4-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -66,7 +68,6 @@
         <dependency>
             <groupId>com.wizzdi</groupId>
             <artifactId>flexicore-boot-starter-data-jpa</artifactId>
-            <version>1.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -78,7 +79,6 @@
         <dependency>
             <groupId>org.pf4j</groupId>
             <artifactId>pf4j-spring</artifactId>
-            <version>${pf4j-spring.version}</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -92,10 +92,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>org.eclipse.persistence.jpa</artifactId>
-            <version>${version.eclipselink}</version>
-            <scope>test</scope>
+            <groupId>com.wizzdi</groupId>
+            <artifactId>flexicore-boot-starter-data-jpa-eclipselink</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>

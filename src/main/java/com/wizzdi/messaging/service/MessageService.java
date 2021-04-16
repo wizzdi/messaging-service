@@ -176,11 +176,6 @@ public class MessageService implements Plugin {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
 		}
 		messageFilter.setSenders(new ArrayList<>(chatUserMap.values()));
-		ChatUser chatUser = chatUserService.getChatUser(securityContext);
-		if(chatUser!=null){
-			messageFilter.getSenders().add(chatUser);
-		}
-
 		if(messageFilter.getSenders().isEmpty()&&messageFilter.getChats().isEmpty()){
 			throw new BadRequestException("must specify at least one chat or chat user");
 		}
