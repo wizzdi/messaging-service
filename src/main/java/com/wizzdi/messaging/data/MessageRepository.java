@@ -40,7 +40,7 @@ public class MessageRepository implements Plugin {
 		Root<Message> r = q.from(Message.class);
 		List<Predicate> predicates = new ArrayList<>();
 		addMessagePredicates(MessageFilter, cb, q, r, predicates, securityContext);
-		q.select(r).where(predicates.toArray(Predicate[]::new)).orderBy(cb.desc(r.get(Message_.creationDate)));
+		q.select(r).where(predicates.toArray(Predicate[]::new)).orderBy(cb.asc(r.get(Message_.creationDate)));
 		TypedQuery<Message> query = em.createQuery(q);
 		BasicRepository.addPagination(MessageFilter, query);
 		return query.getResultList();

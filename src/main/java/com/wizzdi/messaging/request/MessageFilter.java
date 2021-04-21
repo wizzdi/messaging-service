@@ -19,6 +19,7 @@ public class MessageFilter extends PaginationFilter {
 	private Set<String> senderIds=new HashSet<>();
 	@JsonIgnore
 	private List<ChatUser> senders;
+	private boolean lastPage;
 
 	public BasicPropertiesFilter getBasicPropertiesFilter() {
 		return basicPropertiesFilter;
@@ -64,6 +65,15 @@ public class MessageFilter extends PaginationFilter {
 
 	public <T extends MessageFilter> T setSenders(List<ChatUser> senders) {
 		this.senders = senders;
+		return (T) this;
+	}
+
+	public boolean isLastPage() {
+		return lastPage;
+	}
+
+	public <T extends MessageFilter> T setLastPage(boolean lastPage) {
+		this.lastPage = lastPage;
 		return (T) this;
 	}
 }

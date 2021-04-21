@@ -197,9 +197,14 @@ public class MessageService implements Plugin {
 	}
 
 	public PaginationResponse<Message> getAllMessages(MessageFilter MessageFilter, SecurityContextBase securityContext) {
-		List<Message> list = listAllMessages(MessageFilter, securityContext);
 		long count = messageRepository.countAllMessages(MessageFilter, securityContext);
-		return new PaginationResponse<>(list, MessageFilter, count);
+		PaginationResponse<Message> messagePaginationResponse = new PaginationResponse<>(new ArrayList<>(), MessageFilter, count);
+		if(MessageFilter.isLastPage()){
+			MessageFilter.setCurrentPage((int) messagePaginationResponse.getEndPage());
+		}
+		List<Message> list = listAllMessages(MessageFilter, securityContext);
+		messagePaginationResponse.setList(list);
+		return messagePaginationResponse;
 	}
 
 	public List<Message> listAllMessages(MessageFilter MessageFilter, SecurityContextBase securityContext) {
