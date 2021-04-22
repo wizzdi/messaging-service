@@ -200,7 +200,7 @@ public class MessageService implements Plugin {
 		long count = messageRepository.countAllMessages(MessageFilter, securityContext);
 		PaginationResponse<Message> messagePaginationResponse = new PaginationResponse<>(new ArrayList<>(), MessageFilter, count);
 		if(MessageFilter.isLastPage()){
-			MessageFilter.setCurrentPage((int) messagePaginationResponse.getEndPage());
+			MessageFilter.setCurrentPage((int)(long) messagePaginationResponse.getEndPage());
 		}
 		List<Message> list = listAllMessages(MessageFilter, securityContext);
 		messagePaginationResponse.setList(list);
