@@ -4,15 +4,19 @@ import com.flexicore.annotations.OperationsInside;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.messaging.interfaces.ChatUserProvider;
+import com.wizzdi.messaging.model.ChatUser;
 import com.wizzdi.messaging.model.Message;
 import com.wizzdi.messaging.request.MessageCreate;
 import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
+import com.wizzdi.messaging.service.ChatUserService;
 import com.wizzdi.messaging.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.pf4j.Extension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +31,8 @@ public class MessageController implements Plugin {
 
 	@Autowired
 	private MessageService messageService;
+	@Autowired
+	private ChatUserService chatUserService;
 
 	@PostMapping("/createMessage")
 	@Operation(description = "creates Message",summary = "creates Message")
@@ -52,8 +58,12 @@ public class MessageController implements Plugin {
 		if(message==null){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no Message with id "+id);
 		}
-		if(!message.getSender().getId().equals(securityContext.getUser().getId())){
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"not allowed to change message "+id);
+		ChatUser chatUser = chatUserService.getChatUser(securityContext);
+		if(!message.getSender().getId().equals(chatUser.getId())){
+			if(messageUpdate.getChatUsers()==null||messageUpdate.getChatUsers().isEmpty()||!message.getChatUsers().containsKey(chatUser.getId())){
+				throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"non sender users may change only the message read date and that was not sent");
+
+			}
 
 		}
 		messageUpdate.setMessage(message);

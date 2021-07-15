@@ -3,6 +3,7 @@ package com.wizzdi.messaging.service;
 import com.flexicore.model.Baseclass;
 import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
+import com.wizzdi.dynamic.properties.converter.DynamicPropertiesUtils;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BasicService;
@@ -24,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.metamodel.SingularAttribute;
 import javax.ws.rs.BadRequestException;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -96,34 +98,18 @@ public class MessageService implements Plugin {
 			update=true;
 		}
 		if(messageCreate.getChatUsers()!=null&&!messageCreate.getChatUsers().equals(message.getChatUsers())){
-			Map<String, Object> copy=new HashMap<>(message.getChatUsers());
+			Map<String, Object> copy=new HashMap<>(message.getOther());
 			message.setOther(copy);
-			message.setChatUsers(messageCreate.getChatUsers());
+			Map<String, OffsetDateTime> mergedValues = message.getChatUsers()!=null?message.getChatUsers():new HashMap<>();
+			mergedValues.putAll(messageCreate.getChatUsers());
+			message.setChatUsers(mergedValues);
 			update=true;
 		}
+		Map<String, Object> mergedValues = DynamicPropertiesUtils.updateDynamic(messageCreate.getOther(), message.getOther());
 
-		if (messageCreate.getOther() != null && !messageCreate.getOther().isEmpty()) {
-			Map<String, Object> jsonNode = message.getOther();
-			if (jsonNode == null) {
-				message.setOther(messageCreate.getOther());
-				update = true;
-			} else {
-				Map<String, Object> copy=new HashMap<>(messageCreate.getOther());
-				for (Map.Entry<String, Object> entry : messageCreate.getOther().entrySet()) {
-					String key = entry.getKey();
-					Object newVal = entry.getValue();
-					Object val = jsonNode.get(key);
-					if (newVal!=null&&!newVal.equals(val)) {
-						copy.put(key, newVal);
-						update = true;
-					}
-				}
-				if(update){
-					message.setOther(copy);
-				}
-			}
-
-
+		if (mergedValues!=null) {
+			message.setOther(mergedValues);
+			update=true;
 		}
 		return update;
 	}
@@ -179,6 +165,15 @@ public class MessageService implements Plugin {
 		if(messageFilter.getSenders().isEmpty()&&messageFilter.getChats().isEmpty()){
 			throw new BadRequestException("must specify at least one chat or chat user");
 		}
+
+
+		Set<String> unreadByIds=messageFilter.getUnreadByIds();
+		Map<String,ChatUser> unreadByMap=unreadByIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,unreadByIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
+		unreadByIds.removeAll(unreadByMap.keySet());
+		if(!unreadByIds.isEmpty()){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + unreadByIds);
+		}
+		messageFilter.setUnreadBy(new ArrayList<>(unreadByMap.values()));
 
 
 

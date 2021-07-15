@@ -8,6 +8,7 @@ import com.wizzdi.flexicore.security.data.BaseclassRepository;
 import com.wizzdi.flexicore.security.data.BasicRepository;
 import com.wizzdi.messaging.model.*;
 import com.wizzdi.messaging.request.MessageFilter;
+import org.eclipse.persistence.internal.jpa.querydef.CriteriaBuilderImpl;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,9 +20,11 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @Extension
@@ -63,6 +66,21 @@ public class MessageRepository implements Plugin {
 			Set<String> ids=messageFilter.getSenders().stream().map(f->f.getId()).collect(Collectors.toSet());
 			Join<T, ChatUser> join=r.join(Message_.sender);
 			predicates.add(join.get(ChatUser_.id).in(ids));
+		}
+		if(messageFilter.getUnreadBy()!=null&&!messageFilter.getUnreadBy().isEmpty()){
+
+			Set<String> ids=messageFilter.getUnreadBy().stream().map(f->f.getId()).collect(Collectors.toSet());
+			Predicate pred = cb.or();
+			for (String id : ids) {
+				Expression<String> userField = cb.function("jsonb_extract_path_text",
+						String.class,
+						r.get("other"),
+						cb.literal(Message.CHATUSERS_FIELD),
+						cb.literal(id));
+				pred=cb.or(pred,userField.isNull());
+			}
+			predicates.add(pred);
+
 		}
 
 

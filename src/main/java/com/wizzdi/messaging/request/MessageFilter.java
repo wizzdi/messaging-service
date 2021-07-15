@@ -6,6 +6,7 @@ import com.wizzdi.flexicore.security.request.PaginationFilter;
 import com.wizzdi.messaging.model.Chat;
 import com.wizzdi.messaging.model.ChatUser;
 
+import javax.persistence.Column;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,9 @@ public class MessageFilter extends PaginationFilter {
 	private Set<String> senderIds=new HashSet<>();
 	@JsonIgnore
 	private List<ChatUser> senders;
+	private Set<String> unreadByIds=new HashSet<>();
+	@JsonIgnore
+	private List<ChatUser> unreadBy;
 	private boolean lastPage;
 
 	public BasicPropertiesFilter getBasicPropertiesFilter() {
@@ -74,6 +78,25 @@ public class MessageFilter extends PaginationFilter {
 
 	public <T extends MessageFilter> T setLastPage(boolean lastPage) {
 		this.lastPage = lastPage;
+		return (T) this;
+	}
+
+	public Set<String> getUnreadByIds() {
+		return unreadByIds;
+	}
+
+	public <T extends MessageFilter> T setUnreadByIds(Set<String> unreadByIds) {
+		this.unreadByIds = unreadByIds;
+		return (T) this;
+	}
+
+	@JsonIgnore
+	public List<ChatUser> getUnreadBy() {
+		return unreadBy;
+	}
+
+	public <T extends MessageFilter> T setUnreadBy(List<ChatUser> unreadBy) {
+		this.unreadBy = unreadBy;
 		return (T) this;
 	}
 }

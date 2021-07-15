@@ -1,5 +1,7 @@
 package com.wizzdi.messaging.app;
 
+import com.wizzdi.dynamic.properties.converter.EnableDynamicProperties;
+import com.wizzdi.dynamic.properties.converter.postgresql.PostgresqlJsonConverter;
 import com.wizzdi.flexicore.boot.base.annotations.plugins.EnableFlexiCorePlugins;
 import com.wizzdi.flexicore.boot.jpa.annotations.EnableFlexiCoreJPAPlugins;
 import com.wizzdi.flexicore.boot.rest.annotations.EnableFlexiCoreRESTPlugins;
@@ -20,7 +22,8 @@ import java.util.Arrays;
 @EnableFlexiCoreJPAPlugins
 @EnableFlexiCoreSecurity
 @EnableFlexiCoreRESTPlugins
-@SpringBootApplication(scanBasePackages = "com.wizzdi.messaging")
+@SpringBootApplication(scanBasePackages = "com.wizzdi.messaging",scanBasePackageClasses = PostgresqlJsonConverter.class)
+@EnableDynamicProperties
 public class App {
 
 

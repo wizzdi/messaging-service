@@ -12,6 +12,7 @@ import com.wizzdi.messaging.model.Message;
 import com.wizzdi.messaging.request.ChatUserCreate;
 import com.wizzdi.messaging.request.MessageCreate;
 import com.wizzdi.messaging.request.MessageFilter;
+import com.wizzdi.messaging.request.MessageUpdate;
 import com.wizzdi.messaging.service.ChatUserService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +28,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @ExtendWith(SpringExtension.class)
@@ -101,6 +105,55 @@ public class MessageControllerTest {
         Assertions.assertNotNull(body);
         List<Message> messages = body.getList();
         Assertions.assertTrue(messages.stream().anyMatch(f->f.getId().equals(message.getId())));
+
+    }
+    @Test
+    @Order(3)
+    public void testGetUnread() throws InterruptedException {
+        MessageFilter request = new MessageFilter();
+        request.setChatsIds(Collections.singleton(chat.getId()));
+        request.setUnreadByIds(Collections.singleton(chatUser.getId()));
+        ParameterizedTypeReference<PaginationResponse<Message>> t = new ParameterizedTypeReference<>() {};
+        ResponseEntity<PaginationResponse<Message>> response = this.restTemplate.exchange("/message/getAllMessages", HttpMethod.POST, new HttpEntity<>(request), t);
+        Assertions.assertEquals(200, response.getStatusCodeValue());
+        PaginationResponse<Message> body = response.getBody();
+        Assertions.assertNotNull(body);
+        List<Message> messages = body.getList();
+        Assertions.assertTrue(messages.stream().anyMatch(f->f.getId().equals(message.getId())));
+
+    }
+
+    @Test
+    @Order(4)
+    public void testMarkRead() throws InterruptedException {
+        Map<String, OffsetDateTime> readMap=new HashMap<>();
+        readMap.put(chatUser.getId(),OffsetDateTime.now());
+        MessageUpdate request = new MessageUpdate()
+                .setId(message.getId())
+                .setChatUsers(readMap);
+
+        ParameterizedTypeReference<Message> t = new ParameterizedTypeReference<>() {};
+        ResponseEntity<Message> response = this.restTemplate.exchange("/message/updateMessage", HttpMethod.PUT, new HttpEntity<>(request), t);
+        Assertions.assertEquals(200, response.getStatusCodeValue());
+        message = response.getBody();
+        Assertions.assertNotNull(message);
+        Assertions.assertTrue(request.getChatUsers().containsKey(chatUser.getId()));
+
+    }
+
+    @Test
+    @Order(5)
+    public void testGetUnreadShouldBeEmpty() throws InterruptedException {
+        MessageFilter request = new MessageFilter();
+        request.setChatsIds(Collections.singleton(chat.getId()));
+        request.setUnreadByIds(Collections.singleton(chatUser.getId()));
+        ParameterizedTypeReference<PaginationResponse<Message>> t = new ParameterizedTypeReference<>() {};
+        ResponseEntity<PaginationResponse<Message>> response = this.restTemplate.exchange("/message/getAllMessages", HttpMethod.POST, new HttpEntity<>(request), t);
+        Assertions.assertEquals(200, response.getStatusCodeValue());
+        PaginationResponse<Message> body = response.getBody();
+        Assertions.assertNotNull(body);
+        List<Message> messages = body.getList();
+        Assertions.assertTrue(messages.stream().noneMatch(f->f.getId().equals(message.getId())));
 
     }
 
