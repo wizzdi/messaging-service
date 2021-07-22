@@ -86,24 +86,16 @@ public class MessageService implements Plugin {
 			update=true;
 		}
 		if(messageCreate.getContent()!=null&&!messageCreate.getContent().equals(message.getContent())){
-			Map<String, Object> copy=new HashMap<>(message.getOther());
-			message.setOther(copy);
-			message.setContent(messageCreate.getContent());
-			update=true;
+			messageCreate.getOther().put(Message.CONTENT_FIELD,messageCreate.getContent());
 		}
 		if(messageCreate.getMedia()!=null&&!messageCreate.getMedia().equals(message.getMedia())){
-			Map<String, Object> copy=new HashMap<>(message.getOther());
-			message.setOther(copy);
-			message.setMedia(messageCreate.getMedia());
-			update=true;
+			messageCreate.getOther().put(Message.MEDIA_FIELD,messageCreate.getMedia());
+
 		}
 		if(messageCreate.getChatUsers()!=null&&!messageCreate.getChatUsers().equals(message.getChatUsers())){
-			Map<String, Object> copy=new HashMap<>(message.getOther());
-			message.setOther(copy);
 			Map<String, OffsetDateTime> mergedValues = message.getChatUsers()!=null?message.getChatUsers():new HashMap<>();
 			mergedValues.putAll(messageCreate.getChatUsers());
-			message.setChatUsers(mergedValues);
-			update=true;
+			messageCreate.getOther().put(Message.CHATUSERS_FIELD,mergedValues);
 		}
 		Map<String, Object> mergedValues = DynamicPropertiesUtils.updateDynamic(messageCreate.getOther(), message.getOther());
 
