@@ -23,6 +23,9 @@ public class MessageFilter extends PaginationFilter {
 	private Set<String> unreadByIds=new HashSet<>();
 	@JsonIgnore
 	private List<ChatUser> unreadBy;
+	private Set<String> addressedToIds=new HashSet<>();
+	@JsonIgnore
+	private List<ChatUser> addressedTo;
 	private boolean lastPage;
 
 	public BasicPropertiesFilter getBasicPropertiesFilter() {
@@ -97,6 +100,25 @@ public class MessageFilter extends PaginationFilter {
 
 	public <T extends MessageFilter> T setUnreadBy(List<ChatUser> unreadBy) {
 		this.unreadBy = unreadBy;
+		return (T) this;
+	}
+
+	@JsonIgnore
+	public List<ChatUser> getAddressedTo() {
+		return addressedTo;
+	}
+
+	public <T extends MessageFilter> T setAddressedTo(List<ChatUser> addressedTo) {
+		this.addressedTo = addressedTo;
+		return (T) this;
+	}
+
+	public Set<String> getAddressedToIds() {
+		return addressedToIds;
+	}
+
+	public <T extends MessageFilter> T setAddressedToIds(Set<String> addressedToIds) {
+		this.addressedToIds = addressedToIds;
 		return (T) this;
 	}
 }

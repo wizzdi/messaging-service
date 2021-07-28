@@ -154,8 +154,17 @@ public class MessageService implements Plugin {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
 		}
 		messageFilter.setSenders(new ArrayList<>(chatUserMap.values()));
-		if(messageFilter.getSenders().isEmpty()&&messageFilter.getChats().isEmpty()){
-			throw new BadRequestException("must specify at least one chat or chat user");
+
+		Set<String> addressedToIds=messageFilter.getAddressedToIds();
+		Map<String,ChatUser> addressedToMap=addressedToIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,addressedToIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
+		addressedToIds.removeAll(addressedToMap.keySet());
+		if(!addressedToIds.isEmpty()){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + addressedToIds);
+		}
+		messageFilter.setAddressedTo(new ArrayList<>(addressedToMap.values()));
+
+		if(messageFilter.getSenders().isEmpty()&&messageFilter.getChats().isEmpty()&&messageFilter.getAddressedTo().isEmpty()){
+			throw new BadRequestException("must specify at least one chat or chat user(sender or addressed to)");
 		}
 
 

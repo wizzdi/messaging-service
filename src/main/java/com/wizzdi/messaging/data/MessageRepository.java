@@ -56,6 +56,17 @@ public class MessageRepository implements Plugin {
 			BasicRepository.addBasicPropertiesFilter(messageFilter.getBasicPropertiesFilter(),cb,q,r,predicates);
 
 		}
+		if(messageFilter.getAddressedTo()!=null&&!messageFilter.getAddressedTo().isEmpty()){
+			Set<String> ids=messageFilter.getAddressedTo().stream().map(f->f.getId()).collect(Collectors.toSet());
+
+			Join<T, Chat> join=r.join(Message_.chat);
+			Join<T,ChatUser> senderJoin=r.join(Message_.sender);
+			Join<Chat,ChatToChatUser> linkJoin=join.join(Chat_.chatToChatUsers);
+			Join<ChatToChatUser,ChatUser> chatUserJoin=linkJoin.join(ChatToChatUser_.chatUser);
+			Predicate participatesInChat = chatUserJoin.get(ChatUser_.id).in(messageFilter.getAddressedTo());
+			Predicate notSender = cb.not(senderJoin.get(ChatUser_.id).in(ids));
+			predicates.add(cb.and(participatesInChat, notSender));
+		}
 		if(messageFilter.getChats()!=null&&!messageFilter.getChats().isEmpty()){
 			Set<String> ids=messageFilter.getChats().stream().map(f->f.getId()).collect(Collectors.toSet());
 			Join<T, Chat> join=r.join(Message_.chat);
