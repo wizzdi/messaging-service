@@ -139,6 +139,7 @@ public class MessageService implements Plugin {
 
 	public void validate(MessageFilter messageFilter, SecurityContextBase securityContext) {
 		basicService.validate(messageFilter, securityContext);
+		ChatUser thisChatUser=chatUserService.getChatUser(securityContext);
 		Set<String> chatIds=messageFilter.getChatsIds();
 		Map<String,Chat> chatMap=chatIds.isEmpty()?new HashMap<>():messageRepository.listByIds(Chat.class,chatIds,Chat_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
 		chatIds.removeAll(chatMap.keySet());
@@ -148,15 +149,21 @@ public class MessageService implements Plugin {
 		messageFilter.setChats(new ArrayList<>(chatMap.values()));
 
 		Set<String> senderIds=messageFilter.getSenderIds();
-		Map<String,ChatUser> chatUserMap=senderIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,senderIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
-		senderIds.removeAll(chatUserMap.keySet());
+		Map<String,ChatUser> sendersMap=senderIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,senderIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
+		if(thisChatUser!=null&&senderIds.contains(thisChatUser.getId())){
+			sendersMap.put(thisChatUser.getId(), thisChatUser);
+		}
+		senderIds.removeAll(sendersMap.keySet());
 		if(!senderIds.isEmpty()){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + senderIds);
 		}
-		messageFilter.setSenders(new ArrayList<>(chatUserMap.values()));
+		messageFilter.setSenders(new ArrayList<>(sendersMap.values()));
 
 		Set<String> addressedToIds=messageFilter.getAddressedToIds();
 		Map<String,ChatUser> addressedToMap=addressedToIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,addressedToIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
+		if(thisChatUser!=null&&addressedToIds.contains(thisChatUser.getId())){
+			addressedToMap.put(thisChatUser.getId(), thisChatUser);
+		}
 		addressedToIds.removeAll(addressedToMap.keySet());
 		if(!addressedToIds.isEmpty()){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + addressedToIds);
@@ -170,6 +177,9 @@ public class MessageService implements Plugin {
 
 		Set<String> unreadByIds=messageFilter.getUnreadByIds();
 		Map<String,ChatUser> unreadByMap=unreadByIds.isEmpty()?new HashMap<>():listByIds(ChatUser.class,unreadByIds, ChatUser_.security,securityContext).stream().collect(Collectors.toMap(f->f.getId(), f->f));
+		if(thisChatUser!=null&&unreadByIds.contains(thisChatUser.getId())){
+			unreadByMap.put(thisChatUser.getId(), thisChatUser);
+		}
 		unreadByIds.removeAll(unreadByMap.keySet());
 		if(!unreadByIds.isEmpty()){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat users with ids " + unreadByIds);

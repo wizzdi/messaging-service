@@ -4,6 +4,7 @@ import com.flexicore.model.Baseclass;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.security.service.BaseclassService;
 import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.flexicore.security.service.SecurityUserService;
 import com.wizzdi.messaging.data.ChatUserRepository;
@@ -46,9 +47,7 @@ public class ChatUserService implements Plugin {
 
 	public ChatUser createChatUser(ChatUserCreate chatUserCreate, SecurityContextBase securityContext) {
 		ChatUser chatUser = createChatUserNoMerge(chatUserCreate, securityContext);
-		Baseclass baseclass=new Baseclass(chatUser.getName(),securityContext);
-		chatUser.setSecurity(baseclass);
-		chatUserRepository.massMerge(Arrays.asList(baseclass,chatUser));
+		chatUserRepository.merge(chatUser);
 		return chatUser;
 	}
 
@@ -68,6 +67,7 @@ public class ChatUserService implements Plugin {
 		ChatUser chatUser = new ChatUser();
 		chatUser.setId(Baseclass.getBase64ID());
 		updateChatUserNoMerge(chatUserCreate, chatUser);
+		BaseclassService.createSecurityObjectNoMerge(chatUser,securityContext);
 		return chatUser;
 	}
 

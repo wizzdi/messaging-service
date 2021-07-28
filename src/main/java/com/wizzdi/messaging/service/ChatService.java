@@ -6,6 +6,7 @@ import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.security.service.BaseclassService;
 import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.ChatRepository;
 import com.wizzdi.messaging.model.Chat;
@@ -61,10 +62,8 @@ public class ChatService implements Plugin {
 	public Chat createChatNoMerge(ChatCreate chatCreate, SecurityContextBase securityContext) {
 		Chat chat = new Chat();
 		chat.setId(Baseclass.getBase64ID());
-		Baseclass baseclass=new Baseclass(chat.getName(),securityContext);
-		baseclass.setClazz(Baseclass.getClazzByName(Chat.class.getCanonicalName()));
-		chat.setSecurity(baseclass);
 		updateChatNoMerge(chatCreate, chat);
+		BaseclassService.createSecurityObjectNoMerge(chat,securityContext);
 		return chat;
 	}
 
