@@ -7,6 +7,7 @@ import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.messaging.interfaces.ChatUserProvider;
 import com.wizzdi.messaging.model.ChatUser;
 import com.wizzdi.messaging.model.Message;
+import com.wizzdi.messaging.request.MarkMessagesRequest;
 import com.wizzdi.messaging.request.MessageCreate;
 import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
@@ -39,6 +40,14 @@ public class MessageController implements Plugin {
 	public Message createMessage(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageCreate messageCreate, @RequestAttribute SecurityContextBase securityContext){
 		messageService.validate(messageCreate,securityContext);
 		return messageService.createMessage(messageCreate,securityContext);
+	}
+
+	@PostMapping("/markRead")
+	@Operation(description = "marks messages as read",summary = "marks messages as read")
+
+	public PaginationResponse<Message> markRead(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MarkMessagesRequest markMessagesRequest, @RequestAttribute SecurityContextBase securityContext){
+		messageService.validate(markMessagesRequest,securityContext);
+		return messageService.markRead(markMessagesRequest,securityContext);
 	}
 
 	@PostMapping("/getAllMessages")

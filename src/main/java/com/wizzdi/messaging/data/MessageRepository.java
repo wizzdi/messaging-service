@@ -63,7 +63,7 @@ public class MessageRepository implements Plugin {
 			Join<T,ChatUser> senderJoin=r.join(Message_.sender);
 			Join<Chat,ChatToChatUser> linkJoin=join.join(Chat_.chatToChatUsers);
 			Join<ChatToChatUser,ChatUser> chatUserJoin=linkJoin.join(ChatToChatUser_.chatUser);
-			Predicate participatesInChat = chatUserJoin.get(ChatUser_.id).in(messageFilter.getAddressedTo());
+			Predicate participatesInChat = chatUserJoin.get(ChatUser_.id).in(ids);
 			Predicate notSender = cb.not(senderJoin.get(ChatUser_.id).in(ids));
 			predicates.add(cb.and(participatesInChat, notSender));
 		}

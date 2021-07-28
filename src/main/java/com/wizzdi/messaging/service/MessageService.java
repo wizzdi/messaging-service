@@ -2,6 +2,7 @@ package com.wizzdi.messaging.service;
 
 import com.flexicore.model.Baseclass;
 import com.flexicore.model.Basic;
+import com.flexicore.model.SecuredBasic_;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.dynamic.properties.converter.DynamicPropertiesUtils;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
@@ -12,6 +13,7 @@ import com.wizzdi.messaging.events.NewMessageEvent;
 import com.wizzdi.messaging.events.UpdatedMessageEvent;
 import com.wizzdi.messaging.interfaces.ChatUserProvider;
 import com.wizzdi.messaging.model.*;
+import com.wizzdi.messaging.request.MarkMessagesRequest;
 import com.wizzdi.messaging.request.MessageCreate;
 import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
@@ -136,8 +138,32 @@ public class MessageService implements Plugin {
 	}
 
 
+	public void validate(MarkMessagesRequest markMessagesRequest, SecurityContextBase securityContext) {
+		MessageFilter messageFilter = markMessagesRequest.getMessageFilter();
+		if(messageFilter ==null){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Message Filter must be send");
+		}
+		validate(messageFilter,securityContext);
+		if(markMessagesRequest.getDateRead()==null){
+			markMessagesRequest.setDateRead(OffsetDateTime.now());
+		}
+		String chatUserId= markMessagesRequest.getChatUserId();
+		ChatUser chatUser=chatUserId!=null?getByIdOrNull(chatUserId,ChatUser.class, SecuredBasic_.security,securityContext):null;
 
-	public void validate(MessageFilter messageFilter, SecurityContextBase securityContext) {
+		if(chatUserId!=null&&chatUser==null){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no chat user with id "+chatUserId);
+		}
+		if(chatUser==null){
+			chatUser=chatUserService.getChatUser(securityContext);
+		}
+		if(chatUser==null){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"chat user must be sent");
+
+		}
+	}
+
+
+		public void validate(MessageFilter messageFilter, SecurityContextBase securityContext) {
 		basicService.validate(messageFilter, securityContext);
 		ChatUser thisChatUser=chatUserService.getChatUser(securityContext);
 		Set<String> chatIds=messageFilter.getChatsIds();
@@ -221,4 +247,20 @@ public class MessageService implements Plugin {
 		return messageRepository.findByIds(c, requested);
 	}
 
+	public PaginationResponse<Message> markRead(MarkMessagesRequest markMessagesRequest, SecurityContextBase securityContext) {
+		PaginationResponse<Message> messagePaginationResponse = getAllMessages(markMessagesRequest.getMessageFilter(), securityContext);
+		List<Message> messages = messagePaginationResponse.getList();
+		Map<String,OffsetDateTime> chatUsersMap=new HashMap<>();
+		chatUsersMap.put(markMessagesRequest.getChatUser().getId(),markMessagesRequest.getDateRead());
+		List<Object> toMerge=new ArrayList<>();
+		for (Message message : messages) {
+			MessageCreate messageCreate=new MessageCreate()
+					.setChatUsers(chatUsersMap);
+			if(updateMessageNoMerge(messageCreate,message)){
+				toMerge.add(message);
+			}
+		}
+		messageRepository.massMerge(toMerge);
+		return messagePaginationResponse;
+	}
 }
