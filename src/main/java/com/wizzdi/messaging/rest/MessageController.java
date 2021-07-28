@@ -4,20 +4,18 @@ import com.flexicore.annotations.OperationsInside;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
-import com.wizzdi.messaging.interfaces.ChatUserProvider;
 import com.wizzdi.messaging.model.ChatUser;
 import com.wizzdi.messaging.model.Message;
 import com.wizzdi.messaging.request.MarkMessagesRequest;
 import com.wizzdi.messaging.request.MessageCreate;
 import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.request.MessageUpdate;
+import com.wizzdi.messaging.response.UnreadMessagesSummary;
 import com.wizzdi.messaging.service.ChatUserService;
 import com.wizzdi.messaging.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.pf4j.Extension;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +46,14 @@ public class MessageController implements Plugin {
 	public PaginationResponse<Message> markRead(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MarkMessagesRequest markMessagesRequest, @RequestAttribute SecurityContextBase securityContext){
 		messageService.validate(markMessagesRequest,securityContext);
 		return messageService.markRead(markMessagesRequest,securityContext);
+	}
+
+	@PostMapping("/getMessageSummary")
+	@Operation(description = "getMessageSummary",summary = "getMessageSummary")
+
+	public UnreadMessagesSummary getMessageSummary(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageFilter messageFilter, @RequestAttribute SecurityContextBase securityContext){
+		messageService.validate(messageFilter,securityContext);
+		return messageService.getMessageSummary(messageFilter,securityContext);
 	}
 
 	@PostMapping("/getAllMessages")

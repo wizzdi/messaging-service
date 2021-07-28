@@ -8,6 +8,7 @@ import com.wizzdi.flexicore.security.data.BaseclassRepository;
 import com.wizzdi.flexicore.security.data.BasicRepository;
 import com.wizzdi.messaging.model.*;
 import com.wizzdi.messaging.request.MessageFilter;
+import com.wizzdi.messaging.response.UnreadMessagesSummaryItem;
 import org.eclipse.persistence.internal.jpa.querydef.CriteriaBuilderImpl;
 import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,5 +142,20 @@ public class MessageRepository implements Plugin {
 
 	public <T> T findByIdOrNull(Class<T> type, String id) {
 		return baseclassRepository.findByIdOrNull(type, id);
+	}
+
+	public List<UnreadMessagesSummaryItem> getMessageSummary(MessageFilter messageFilter, SecurityContextBase securityContext) {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<UnreadMessagesSummaryItem> q = cb.createQuery(UnreadMessagesSummaryItem.class);
+		Root<Message> r = q.from(Message.class);
+		List<Predicate> predicates = new ArrayList<>();
+		addMessagePredicates(messageFilter, cb, q, r, predicates, securityContext);
+		Join<Message,Chat> chatJoin=r.join(Message_.chat);
+		q.select(cb.construct(UnreadMessagesSummaryItem.class,chatJoin.get(Chat_.id),cb.count(r)))
+				.where(predicates.toArray(Predicate[]::new))
+				.groupBy(chatJoin.get(Chat_.id))
+				.orderBy(cb.asc(chatJoin.get(Chat_.id)));
+		TypedQuery<UnreadMessagesSummaryItem> query = em.createQuery(q);
+		return query.getResultList();
 	}
 }
