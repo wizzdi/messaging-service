@@ -94,7 +94,7 @@ public class MessageService implements Plugin {
 
         }
         if (messageCreate.getChatUsers() != null && !messageCreate.getChatUsers().equals(message.getChatUsers())) {
-            Map<String, OffsetDateTime> mergedValues = message.getChatUsers() != null ? message.getChatUsers() : new HashMap<>();
+            Map<String, OffsetDateTime> mergedValues = message.getChatUsers() != null ? new HashMap<>(message.getChatUsers()) : new HashMap<>();
             mergedValues.putAll(messageCreate.getChatUsers());
             messageCreate.getOther().put(Message.CHATUSERS_FIELD, mergedValues);
         }
