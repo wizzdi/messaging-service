@@ -21,6 +21,7 @@ import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.metamodel.SingularAttribute;
@@ -64,17 +65,6 @@ public class MessageReceiverDeviceService implements Plugin {
 		return messageReceiverDevice;
 	}
 
-	public void merge(Object o) {
-		messageReceiverDeviceRepository.merge(o);
-	}
-
-	public void massMerge(List<Object> list) {
-		messageReceiverDeviceRepository.massMerge(list);
-	}
-
-	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
-		return messageReceiverDeviceRepository.listByIds(c, ids, securityContext);
-	}
 
 	public MessageReceiverDevice createMessageReceiverDeviceNoMerge(MessageReceiverDeviceCreate messageReceiverDeviceCreate, SecurityContextBase securityContext) {
 		MessageReceiverDevice messageReceiverDevice = new MessageReceiverDevice();
@@ -129,6 +119,22 @@ public class MessageReceiverDeviceService implements Plugin {
 
 	}
 
+
+
+	public PaginationResponse<MessageReceiverDevice> getAllMessageReceiverDevices(MessageReceiverDeviceFilter MessageReceiverDeviceFilter, SecurityContextBase securityContext) {
+		List<MessageReceiverDevice> list = listAllMessageReceiverDevices(MessageReceiverDeviceFilter, securityContext);
+		long count = messageReceiverDeviceRepository.countAllMessageReceiverDevices(MessageReceiverDeviceFilter, securityContext);
+		return new PaginationResponse<>(list, MessageReceiverDeviceFilter, count);
+	}
+
+	public List<MessageReceiverDevice> listAllMessageReceiverDevices(MessageReceiverDeviceFilter MessageReceiverDeviceFilter, SecurityContextBase securityContext) {
+		return messageReceiverDeviceRepository.listAllMessageReceiverDevices(MessageReceiverDeviceFilter, securityContext);
+	}
+
+	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
+		return messageReceiverDeviceRepository.listByIds(c, ids, securityContext);
+	}
+
 	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
 		return messageReceiverDeviceRepository.getByIdOrNull(id, c, securityContext);
 	}
@@ -145,21 +151,21 @@ public class MessageReceiverDeviceService implements Plugin {
 		return messageReceiverDeviceRepository.findByIds(c, ids, idAttribute);
 	}
 
-	public PaginationResponse<MessageReceiverDevice> getAllMessageReceiverDevices(MessageReceiverDeviceFilter MessageReceiverDeviceFilter, SecurityContextBase securityContext) {
-		List<MessageReceiverDevice> list = listAllMessageReceiverDevices(MessageReceiverDeviceFilter, securityContext);
-		long count = messageReceiverDeviceRepository.countAllMessageReceiverDevices(MessageReceiverDeviceFilter, securityContext);
-		return new PaginationResponse<>(list, MessageReceiverDeviceFilter, count);
-	}
-
-	public List<MessageReceiverDevice> listAllMessageReceiverDevices(MessageReceiverDeviceFilter MessageReceiverDeviceFilter, SecurityContextBase securityContext) {
-		return messageReceiverDeviceRepository.listAllMessageReceiverDevices(MessageReceiverDeviceFilter, securityContext);
-	}
-
-	public <T extends Baseclass> List<T> findByIds(Class<T> c, Set<String> requested) {
+	public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
 		return messageReceiverDeviceRepository.findByIds(c, requested);
 	}
 
 	public <T> T findByIdOrNull(Class<T> type, String id) {
 		return messageReceiverDeviceRepository.findByIdOrNull(type, id);
+	}
+
+	@Transactional
+	public void merge(Object base) {
+		messageReceiverDeviceRepository.merge(base);
+	}
+
+	@Transactional
+	public void massMerge(List<?> toMerge) {
+		messageReceiverDeviceRepository.massMerge(toMerge);
 	}
 }

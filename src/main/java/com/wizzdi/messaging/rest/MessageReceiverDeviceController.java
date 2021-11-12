@@ -1,6 +1,7 @@
 package com.wizzdi.messaging.rest;
 
 import com.flexicore.annotations.OperationsInside;
+import com.flexicore.model.SecuredBasic_;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
@@ -48,7 +49,7 @@ public class MessageReceiverDeviceController implements Plugin {
 
 	public MessageReceiverDevice updateMessageReceiverDevice(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageReceiverDeviceUpdate messageReceiverDeviceUpdate, @RequestAttribute SecurityContextBase securityContext){
 		String id=messageReceiverDeviceUpdate.getId();
-		MessageReceiverDevice messageReceiverDevice=id!=null? messageReceiverDeviceService.findByIdOrNull(MessageReceiverDevice.class,id):null;
+		MessageReceiverDevice messageReceiverDevice=id!=null? messageReceiverDeviceService.getByIdOrNull(id,MessageReceiverDevice.class, SecuredBasic_.security,securityContext):null;
 		if(messageReceiverDevice==null){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no MessageReceiverDevice user with id "+id);
 		}

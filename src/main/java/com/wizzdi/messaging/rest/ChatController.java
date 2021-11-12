@@ -2,6 +2,7 @@ package com.wizzdi.messaging.rest;
 
 import com.flexicore.annotations.OperationsInside;
 
+import com.flexicore.model.SecuredBasic_;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
@@ -49,7 +50,7 @@ public class ChatController implements Plugin {
 
 	public Chat updateChat(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatUpdate chatUpdate, @RequestAttribute SecurityContextBase securityContext){
 		String id=chatUpdate.getId();
-		Chat chat=id!=null? chatService.getChatByIdOrNull(id,Chat.class,securityContext):null;
+		Chat chat=id!=null? chatService.getByIdOrNull(id,Chat.class, SecuredBasic_.security,securityContext):null;
 		if(chat==null){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no Chat user with id "+id);
 		}

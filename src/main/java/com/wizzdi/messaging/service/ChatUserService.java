@@ -1,6 +1,7 @@
 package com.wizzdi.messaging.service;
 
 import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
@@ -19,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -51,17 +54,6 @@ public class ChatUserService implements Plugin {
 		return chatUser;
 	}
 
-	public void merge(Object o) {
-		chatUserRepository.merge(o);
-	}
-
-	public void massMerge(List<Object> list) {
-		chatUserRepository.massMerge(list);
-	}
-
-	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
-		return chatUserRepository.listByIds(c, ids, securityContext);
-	}
 
 	public ChatUser createChatUserNoMerge(ChatUserCreate chatUserCreate, SecurityContextBase securityContext) {
 		ChatUser chatUser = new ChatUser();
@@ -95,13 +87,6 @@ public class ChatUserService implements Plugin {
 
 	}
 
-	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
-		return chatUserRepository.getByIdOrNull(id, c, securityContext);
-	}
-
-	public <T extends ChatUser> T getChatUserByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
-		return chatUserRepository.getChatUserByIdOrNull(id, c, securityContext);
-	}
 
 	public PaginationResponse<ChatUser> getAllChatUsers(ChatUserFilter ChatUserFilter, SecurityContextBase securityContext) {
 		List<ChatUser> list = listAllChatUsers(ChatUserFilter, securityContext);
@@ -113,8 +98,42 @@ public class ChatUserService implements Plugin {
 		return chatUserRepository.listAllChatUsers(ChatUserFilter, securityContext);
 	}
 
-	public <T extends Baseclass> List<T> findByIds(Class<T> c, Set<String> requested) {
+
+	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
+		return chatUserRepository.listByIds(c, ids, securityContext);
+	}
+
+	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+		return chatUserRepository.getByIdOrNull(id, c, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return chatUserRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+		return chatUserRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+	}
+
+	public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+		return chatUserRepository.findByIds(c, ids, idAttribute);
+	}
+
+	public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
 		return chatUserRepository.findByIds(c, requested);
 	}
 
+	public <T> T findByIdOrNull(Class<T> type, String id) {
+		return chatUserRepository.findByIdOrNull(type, id);
+	}
+
+	@Transactional
+	public void merge(Object base) {
+		chatUserRepository.merge(base);
+	}
+
+	@Transactional
+	public void massMerge(List<?> toMerge) {
+		chatUserRepository.massMerge(toMerge);
+	}
 }

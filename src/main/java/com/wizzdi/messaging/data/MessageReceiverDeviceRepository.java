@@ -79,32 +79,12 @@ public class MessageReceiverDeviceRepository implements Plugin {
 
 	}
 
-	@Transactional
-	public void merge(Object o) {
-		em.merge(o);
-	}
-
-	@Transactional
-	public void massMerge(List<Object> list) {
-		for (Object o : list) {
-			em.merge(o);
-		}
-	}
-
 	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
 		return securedBasicRepository.listByIds(c, ids, securityContext);
 	}
 
 	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
 		return securedBasicRepository.getByIdOrNull(id, c, securityContext);
-	}
-
-	public <T extends Baseclass> List<T> findByIds(Class<T> c, Set<String> requested) {
-		return securedBasicRepository.findByIds(c, requested);
-	}
-
-	public <T> T findByIdOrNull(Class<T> type, String id) {
-		return securedBasicRepository.findByIdOrNull(type, id);
 	}
 
 	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
@@ -119,4 +99,21 @@ public class MessageReceiverDeviceRepository implements Plugin {
 		return securedBasicRepository.findByIds(c, ids, idAttribute);
 	}
 
+	public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
+		return securedBasicRepository.findByIds(c, requested);
+	}
+
+	public <T> T findByIdOrNull(Class<T> type, String id) {
+		return securedBasicRepository.findByIdOrNull(type, id);
+	}
+
+	@Transactional
+	public void merge(Object base) {
+		securedBasicRepository.merge(base);
+	}
+
+	@Transactional
+	public void massMerge(List<?> toMerge) {
+		securedBasicRepository.massMerge(toMerge);
+	}
 }

@@ -1,6 +1,7 @@
 package com.wizzdi.messaging.data;
 
 import com.flexicore.model.Baseclass;
+import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BasicRepository;
@@ -19,6 +20,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -64,18 +66,6 @@ public class ChatUserRepository implements Plugin {
 
     }
 
-    @Transactional
-    public void merge(Object o) {
-        em.merge(o);
-    }
-
-    @Transactional
-    public void massMerge(List<Object> list) {
-        for (Object o : list) {
-            em.merge(o);
-        }
-    }
-
     public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
         return securedBasicRepository.listByIds(c, ids, securityContext);
     }
@@ -84,11 +74,33 @@ public class ChatUserRepository implements Plugin {
         return securedBasicRepository.getByIdOrNull(id, c, securityContext);
     }
 
-    public <T extends Baseclass> List<T> findByIds(Class<T> c, Set<String> requested) {
+    public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return securedBasicRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, E extends Baseclass, T extends D> List<T> listByIds(Class<T> c, Set<String> ids, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
+        return securedBasicRepository.listByIds(c, ids, baseclassAttribute, securityContext);
+    }
+
+    public <D extends Basic, T extends D> List<T> findByIds(Class<T> c, Set<String> ids, SingularAttribute<D, String> idAttribute) {
+        return securedBasicRepository.findByIds(c, ids, idAttribute);
+    }
+
+    public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
         return securedBasicRepository.findByIds(c, requested);
     }
 
-    public <T extends ChatUser> T getChatUserByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
-        return securedBasicRepository.getByIdOrNull(id, c, ChatUser_.security, securityContext);
+    public <T> T findByIdOrNull(Class<T> type, String id) {
+        return securedBasicRepository.findByIdOrNull(type, id);
+    }
+
+    @Transactional
+    public void merge(Object base) {
+        securedBasicRepository.merge(base);
+    }
+
+    @Transactional
+    public void massMerge(List<?> toMerge) {
+        securedBasicRepository.massMerge(toMerge);
     }
 }

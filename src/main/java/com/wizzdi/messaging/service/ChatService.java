@@ -19,6 +19,7 @@ import org.pf4j.Extension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.metamodel.SingularAttribute;
@@ -47,17 +48,6 @@ public class ChatService implements Plugin {
 		return chat;
 	}
 
-	public void merge(Object o) {
-		chatRepository.merge(o);
-	}
-
-	public void massMerge(List<Object> list) {
-		chatRepository.massMerge(list);
-	}
-
-	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
-		return chatRepository.listByIds(c, ids, securityContext);
-	}
 
 	public Chat createChatNoMerge(ChatCreate chatCreate, SecurityContextBase securityContext) {
 		Chat chat = new Chat();
@@ -107,6 +97,24 @@ public class ChatService implements Plugin {
 
 	}
 
+	public PaginationResponse<Chat> getAllChats(ChatFilter ChatFilter, SecurityContextBase securityContext) {
+		List<Chat> list = listAllChats(ChatFilter, securityContext);
+		long count = chatRepository.countAllChats(ChatFilter, securityContext);
+		return new PaginationResponse<>(list, ChatFilter, count);
+	}
+
+	public List<Chat> listAllChats(ChatFilter ChatFilter, SecurityContextBase securityContext) {
+		return chatRepository.listAllChats(ChatFilter, securityContext);
+	}
+
+	public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
+		return chatRepository.listByIds(c, ids, securityContext);
+	}
+
+	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
+		return chatRepository.getByIdOrNull(id, c, securityContext);
+	}
+
 	public <D extends Basic, E extends Baseclass, T extends D> T getByIdOrNull(String id, Class<T> c, SingularAttribute<D, E> baseclassAttribute, SecurityContextBase securityContext) {
 		return chatRepository.getByIdOrNull(id, c, baseclassAttribute, securityContext);
 	}
@@ -119,30 +127,21 @@ public class ChatService implements Plugin {
 		return chatRepository.findByIds(c, ids, idAttribute);
 	}
 
+	public <T extends Basic> List<T> findByIds(Class<T> c, Set<String> requested) {
+		return chatRepository.findByIds(c, requested);
+	}
+
 	public <T> T findByIdOrNull(Class<T> type, String id) {
 		return chatRepository.findByIdOrNull(type, id);
 	}
 
-	public <T extends Baseclass> T getByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
-		return chatRepository.getByIdOrNull(id, c, securityContext);
+	@Transactional
+	public void merge(Object base) {
+		chatRepository.merge(base);
 	}
 
-	public <T extends Chat> T getChatByIdOrNull(String id, Class<T> c, SecurityContextBase securityContext) {
-		return chatRepository.getChatByIdOrNull(id, c, securityContext);
+	@Transactional
+	public void massMerge(List<?> toMerge) {
+		chatRepository.massMerge(toMerge);
 	}
-
-	public PaginationResponse<Chat> getAllChats(ChatFilter ChatFilter, SecurityContextBase securityContext) {
-		List<Chat> list = listAllChats(ChatFilter, securityContext);
-		long count = chatRepository.countAllChats(ChatFilter, securityContext);
-		return new PaginationResponse<>(list, ChatFilter, count);
-	}
-
-	public List<Chat> listAllChats(ChatFilter ChatFilter, SecurityContextBase securityContext) {
-		return chatRepository.listAllChats(ChatFilter, securityContext);
-	}
-
-	public <T extends Baseclass> List<T> findByIds(Class<T> c, Set<String> requested) {
-		return chatRepository.findByIds(c, requested);
-	}
-
 }

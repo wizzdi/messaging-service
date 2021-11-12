@@ -6,6 +6,7 @@ import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.messaging.interfaces.ChatUserProvider;
 import com.wizzdi.messaging.model.ChatUser;
+import com.wizzdi.messaging.model.ChatUser_;
 import com.wizzdi.messaging.request.ChatUserCreate;
 import com.wizzdi.messaging.request.ChatUserFilter;
 import com.wizzdi.messaging.request.ChatUserUpdate;
@@ -51,7 +52,7 @@ public class ChatUserController implements Plugin {
 
 	public ChatUser updateChatUser(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody ChatUserUpdate chatUserUpdate, @RequestAttribute SecurityContextBase securityContext){
 		String id=chatUserUpdate.getId();
-		ChatUser chatUser=id!=null? chatUserService.getChatUserByIdOrNull(id,ChatUser.class,securityContext):null;
+		ChatUser chatUser=id!=null? chatUserService.getByIdOrNull(id,ChatUser.class, ChatUser_.security,securityContext):null;
 		if(chatUser==null){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"no ChatUser user with id "+id);
 		}
