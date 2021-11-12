@@ -6,6 +6,8 @@ import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.data.BaseclassRepository;
 import com.wizzdi.flexicore.security.data.BasicRepository;
+import com.wizzdi.flexicore.security.request.BasicPropertiesFilter;
+import com.wizzdi.flexicore.security.request.SoftDeleteOption;
 import com.wizzdi.messaging.model.*;
 import com.wizzdi.messaging.request.MessageFilter;
 import com.wizzdi.messaging.response.UnreadMessagesSummaryItem;
@@ -53,10 +55,11 @@ public class MessageRepository implements Plugin {
 
 	public <T extends Message> void addMessagePredicates(MessageFilter messageFilter, CriteriaBuilder cb, CommonAbstractCriteria q, From<?, T> r, List<Predicate> predicates, SecurityContextBase securityContext) {
 		
-		if(messageFilter.getBasicPropertiesFilter()!=null){
-			BasicRepository.addBasicPropertiesFilter(messageFilter.getBasicPropertiesFilter(),cb,q,r,predicates);
-
+		if(messageFilter.getBasicPropertiesFilter()==null){
+			messageFilter.setBasicPropertiesFilter(new BasicPropertiesFilter().setSoftDelete(SoftDeleteOption.NON_DELETED_ONLY));
 		}
+		BasicRepository.addBasicPropertiesFilter(messageFilter.getBasicPropertiesFilter(),cb,q,r,predicates);
+
 		if(messageFilter.getAddressedTo()!=null&&!messageFilter.getAddressedTo().isEmpty()){
 			Set<String> ids=messageFilter.getAddressedTo().stream().map(f->f.getId()).collect(Collectors.toSet());
 

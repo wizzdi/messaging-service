@@ -16,6 +16,8 @@ public class MessageReceiverDeviceFilter extends PaginationFilter {
 	@JsonIgnore
 	private List<ChatUser> chatUsers;
 
+	private Set<String> externalIds;
+
 	public BasicPropertiesFilter getBasicPropertiesFilter() {
 		return basicPropertiesFilter;
 	}
@@ -41,6 +43,15 @@ public class MessageReceiverDeviceFilter extends PaginationFilter {
 
 	public <T extends MessageReceiverDeviceFilter> T setChatUsers(List<ChatUser> chatUsers) {
 		this.chatUsers = chatUsers;
+		return (T) this;
+	}
+
+	public Set<String> getExternalIds() {
+		return externalIds;
+	}
+
+	public <T extends MessageReceiverDeviceFilter> T setExternalIds(Set<String> externalIds) {
+		this.externalIds = externalIds;
 		return (T) this;
 	}
 }

@@ -4,7 +4,10 @@ import com.flexicore.model.Baseclass;
 import com.flexicore.model.Basic;
 import com.flexicore.security.SecurityContextBase;
 import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
+import com.wizzdi.flexicore.security.request.BasicPropertiesFilter;
+import com.wizzdi.flexicore.security.request.SoftDeleteOption;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
+import com.wizzdi.flexicore.security.service.BaseclassService;
 import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.MessageReceiverDeviceRepository;
 import com.wizzdi.messaging.model.ChatUser;
@@ -23,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.ws.rs.BadRequestException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +50,20 @@ public class MessageReceiverDeviceService implements Plugin {
 		return messageReceiverDevice;
 	}
 
+	public MessageReceiverDevice getOrCreateMessageReceiverDevice(MessageReceiverDeviceCreate messageReceiverDeviceCreate, SecurityContextBase securityContext){
+		MessageReceiverDevice messageReceiverDevice = listAllMessageReceiverDevices(new MessageReceiverDeviceFilter().setChatUsers(Collections.singletonList(messageReceiverDeviceCreate.getOwner())).setBasicPropertiesFilter(new BasicPropertiesFilter().setSoftDelete(SoftDeleteOption.BOTH)).setExternalIds(Collections.singleton(messageReceiverDeviceCreate.getExternalId())), securityContext).stream().findFirst().orElse(null);
+		if(messageReceiverDevice==null){
+			messageReceiverDevice=createMessageReceiverDevice(messageReceiverDeviceCreate, securityContext);
+		}
+		else{
+			messageReceiverDeviceCreate.setSoftDelete(false);
+			if(updateMessageReceiverDeviceNoMerge(messageReceiverDeviceCreate,messageReceiverDevice)){
+				merge(messageReceiverDevice);
+			}
+		}
+		return messageReceiverDevice;
+	}
+
 	public void merge(Object o) {
 		messageReceiverDeviceRepository.merge(o);
 	}
@@ -62,6 +80,7 @@ public class MessageReceiverDeviceService implements Plugin {
 		MessageReceiverDevice messageReceiverDevice = new MessageReceiverDevice();
 		messageReceiverDevice.setId(Baseclass.getBase64ID());
 		updateMessageReceiverDeviceNoMerge(messageReceiverDeviceCreate, messageReceiverDevice);
+		BaseclassService.createSecurityObjectNoMerge(messageReceiverDevice,securityContext);
 		return messageReceiverDevice;
 	}
 

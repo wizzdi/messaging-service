@@ -120,5 +120,25 @@ public class MessageReceiverDeviceControllerTest {
 
     }
 
+    @Test
+    @Order(4)
+    public void createMessageReceiverDeviceAgain() throws InterruptedException {
+        MessageReceiverDeviceCreate request = new MessageReceiverDeviceCreate()
+                .setExternalId("test new ")
+                .setName("test messageReceiverDevice");
+
+        ParameterizedTypeReference<MessageReceiverDevice> t = new ParameterizedTypeReference<>() {};
+        ResponseEntity<MessageReceiverDevice> response = this.restTemplate.exchange("/messageReceiverDevice/createMessageReceiverDevice", HttpMethod.POST, new HttpEntity<>(request), t);
+        Assertions.assertEquals(200, response.getStatusCodeValue());
+        MessageReceiverDevice messageReceiverDevice = response.getBody();
+        Assertions.assertNotNull(messageReceiverDevice);
+        Assertions.assertEquals(this.messageReceiverDevice.getId(),messageReceiverDevice.getId());
+        Assertions.assertEquals(request.getName(),messageReceiverDevice.getName());
+        Assertions.assertEquals(request.getExternalId(),messageReceiverDevice.getExternalId());
+        Assertions.assertEquals(chatUser.getId(),messageReceiverDevice.getOwner().getId());
+
+
+    }
+
 
 }

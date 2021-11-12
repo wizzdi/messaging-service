@@ -32,7 +32,7 @@ public class MessageReceiverDeviceController implements Plugin {
 	@Operation(description = "creates MessageReceiverDevice",summary = "creates MessageReceiverDevice")
 	public MessageReceiverDevice createMessageReceiverDevice(@RequestHeader(value = "authenticationKey",required = false)String key, @RequestBody MessageReceiverDeviceCreate messageReceiverDeviceCreate, @RequestAttribute SecurityContextBase securityContext){
 		messageReceiverDeviceService.validate(messageReceiverDeviceCreate,securityContext);
-		return messageReceiverDeviceService.createMessageReceiverDevice(messageReceiverDeviceCreate,securityContext);
+		return messageReceiverDeviceService.getOrCreateMessageReceiverDevice(messageReceiverDeviceCreate,securityContext);
 	}
 
 	@PostMapping("/getAllMessageReceiverDevices")
