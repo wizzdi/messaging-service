@@ -20,6 +20,7 @@ public class ChatToChatUserFilter extends PaginationFilter {
 	private Set<String> chatUsersIds=new HashSet<>();
 	@JsonIgnore
 	private List<ChatUser> chatUsers;
+	private Boolean disabled;
 
 	public BasicPropertiesFilter getBasicPropertiesFilter() {
 		return basicPropertiesFilter;
@@ -65,6 +66,15 @@ public class ChatToChatUserFilter extends PaginationFilter {
 
 	public <T extends ChatToChatUserFilter> T setChatUsers(List<ChatUser> chatUsers) {
 		this.chatUsers = chatUsers;
+		return (T) this;
+	}
+
+	public Boolean getDisabled() {
+		return disabled;
+	}
+
+	public <T extends ChatToChatUserFilter> T setDisabled(Boolean disabled) {
+		this.disabled = disabled;
 		return (T) this;
 	}
 }

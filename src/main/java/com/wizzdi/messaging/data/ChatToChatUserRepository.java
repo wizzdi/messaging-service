@@ -55,6 +55,10 @@ public class ChatToChatUserRepository implements Plugin {
         }
         BasicRepository.addBasicPropertiesFilter(chatToChatUserFilter.getBasicPropertiesFilter(), cb, q, r, predicates);
 
+        if(chatToChatUserFilter.getDisabled()==null){
+            chatToChatUserFilter.setDisabled(false);
+        }
+        predicates.add(cb.equal(r.get(ChatToChatUser_.disabled),chatToChatUserFilter.getDisabled()));
 
         if (chatToChatUserFilter.getChats() != null && !chatToChatUserFilter.getChats().isEmpty()) {
             Set<String> ids = chatToChatUserFilter.getChats().stream().map(f -> f.getId()).collect(Collectors.toSet());
@@ -84,15 +88,13 @@ public class ChatToChatUserRepository implements Plugin {
     }
 
     @Transactional
-    public void merge(Object o) {
-        em.merge(o);
+    public void merge(Object base) {
+        basicRepository.merge(base);
     }
 
     @Transactional
-    public void massMerge(List<Object> list) {
-        for (Object o : list) {
-            em.merge(o);
-        }
+    public void massMerge(List<?> toMerge) {
+        basicRepository.massMerge(toMerge);
     }
 
     public <T extends Baseclass> List<T> listByIds(Class<T> c, Set<String> ids, SecurityContextBase securityContext) {
