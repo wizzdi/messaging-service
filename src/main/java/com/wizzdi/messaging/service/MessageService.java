@@ -9,6 +9,7 @@ import com.wizzdi.flexicore.boot.base.interfaces.Plugin;
 import com.wizzdi.flexicore.security.response.PaginationResponse;
 import com.wizzdi.flexicore.security.service.BasicService;
 import com.wizzdi.messaging.data.MessageRepository;
+import com.wizzdi.messaging.events.BeforeMessageEvent;
 import com.wizzdi.messaging.events.NewMessageEvent;
 import com.wizzdi.messaging.events.UpdatedMessageEvent;
 import com.wizzdi.messaging.model.*;
@@ -49,6 +50,8 @@ public class MessageService implements Plugin {
     public Message createMessage(MessageCreate messageCreate, SecurityContextBase securityContext) {
         Message message = createMessageNoMerge(messageCreate, securityContext);
         messageRepository.merge(message);
+        applicationEventPublisher.publishEvent(new BeforeMessageEvent(message, securityContext));
+
         applicationEventPublisher.publishEvent(new NewMessageEvent(message, securityContext));
         return message;
     }
@@ -129,7 +132,7 @@ public class MessageService implements Plugin {
         }
         String chatId = messageCreate.getChatId();
         Chat chat = chatId != null ? getByIdOrNull(chatId, Chat.class, Chat_.security, securityContext) : null;
-        if (chatId != null && chat == null) {
+        if (chatId != null && (chat == null || chat.isSoftDelete())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "no chat with id " + chatId);
         }
         messageCreate.setChat(chat);
